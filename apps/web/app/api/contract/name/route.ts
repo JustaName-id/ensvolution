@@ -1,21 +1,19 @@
-import {NextRequest} from "next/server";
 import {getContractNameFromEtherscan} from "@/service/contract-name.service";
-import contractNames from '@/prefetched/contractNames.json'
+import contractNames from '@/prefetched/contractNames.json';
 
-interface QueryParams {
-    contractAddress: string;
-}
+export const runtime = 'edge';
 
-export async function GET(req: NextRequest & { query: QueryParams }) {
-    const { searchParams } = req.nextUrl;
-    const contractAddress = searchParams.get('contractAddress');
+export async function GET(req: Request) {
+    const url = new URL(req.url);
+    const contractAddress = url.searchParams.get('contractAddress');
 
     if (!contractAddress) {
         return new Response('contractAddress is required', { status: 400 });
     }
 
-
-    const prefetchedContract = contractNames.find(contract => contract.address.toLowerCase() === contractAddress.toLowerCase())
+    const prefetchedContract = contractNames.find(contract => 
+        contract.address.toLowerCase() === contractAddress.toLowerCase()
+    );
 
     if(prefetchedContract){
         if(prefetchedContract.contractName){
@@ -33,7 +31,7 @@ export async function GET(req: NextRequest & { query: QueryParams }) {
         });
     }
 
-    const name = await getContractNameFromEtherscan(contractAddress)
+    const name = await getContractNameFromEtherscan(contractAddress);
     return new Response(name, {
         headers: {
             'Content-Type': 'application/json',

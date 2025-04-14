@@ -1,20 +1,17 @@
-import { NextRequest } from 'next/server'
 import axios from 'axios'
 import {serverEnv} from "@/config/serverEnv";
 
-interface QueryParams {
-    address: string
-}
+export const runtime = 'edge';
 
-export async function GET(req: NextRequest & { query: QueryParams }) {
-    const { searchParams } = req.nextUrl
-    const address = searchParams.get('address')
+export async function GET(req: Request) {
+    const url = new URL(req.url);
+    const address = url.searchParams.get('address');
 
     if (!address) {
         return new Response('Address is required', { status: 400 })
     }
 
-    let passport
+    let passport;
 
     try {
         const response = await axios.get(

@@ -1,5 +1,5 @@
 {
-  "name": "shadcn-ui-monorepo",
+  "name": "ensvolution",
   "version": "0.0.1",
   "private": true,
   "scripts": {
@@ -25,6 +25,7 @@
   ],
   "dependencies": {
     "@ensdomains/ensjs": "^4.0.2",
+    "@fleek-platform/next": "^2.2.1",
     "@hookform/resolvers": "^5.0.1",
     "@justaname.id/sdk": "^0.2.181",
     "@justweb3/efp-plugin": "^0.1.80",
@@ -37,9 +38,7 @@
     "axios": "^1.8.4",
     "react-hook-form": "^7.55.0",
     "react-konva": "^19.0.3",
-    "utils": "link:@ensdomains/ensjs/utils",
     "viem": "^2.26.2",
-    "wagmi": "^2.14.16",
-    "zod": "link:@hookform/resolvers/zod"
+    "wagmi": "^2.14.16"
   }
 }
