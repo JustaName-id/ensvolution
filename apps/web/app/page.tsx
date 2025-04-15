@@ -4,8 +4,6 @@ import "@xyflow/react/dist/style.css"
 import {redirect} from "next/navigation";
 import {ensSchema} from "@/schemas/ens.schema";
 
-export const runtime = 'edge';
-
 type Props = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };

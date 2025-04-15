@@ -1,8 +1,6 @@
 import axios from 'axios';
 import {serverEnv} from "@/config/serverEnv";
 
-export const runtime = 'edge';
-
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const address = url.searchParams.get('address');

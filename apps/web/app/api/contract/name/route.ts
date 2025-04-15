@@ -1,7 +1,6 @@
 import {getContractNameFromEtherscan} from "@/service/contract-name.service";
 import contractNames from '@/prefetched/contractNames.json';
 
-export const runtime = 'edge';
 
 export async function GET(req: Request) {
     const url = new URL(req.url);
