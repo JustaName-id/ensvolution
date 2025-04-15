@@ -6,6 +6,8 @@ import {Badge} from "@workspace/ui/components/badge";
 import React, {useCallback, useEffect} from "react";
 import {LineNode, ProfileNode, ResolverNode} from "@/lib/types/ens-profile";
 import {getColor} from "@/lib/utils";
+import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from "@workspace/ui/components/accordion";
+import {useIsMobile} from "@workspace/ui/hooks/use-mobile";
 
 export interface ENSControlBarProps {
     nodes: (ResolverNode | LineNode | ProfileNode)[]
@@ -14,20 +16,21 @@ export interface ENSControlBarProps {
 export const ENSControlBar: React.FC<ENSControlBarProps> = ({nodes}) => {
     const {zoomOut, zoomIn, fitView} = useReactFlow()
     const {transform} = useStore(({transform}) => ({transform}));
-
+    const isMobile = useIsMobile()
     const fit = useCallback(() => {
         if (nodes.length === 0) return
         fitView({
-            nodes: nodes.map(node => ({
+            nodes: [...nodes.filter(node => node.type==="resolver").map(node => ({
                 id: node.id
             })),
+
+                ...nodes.filter(node => node.type === "profile").slice(0,
+                    isMobile ? 5 : 10
+                ).map(node => ({
+                    id: node.id
+                })),
+            ],
             duration: 1000,
-            padding: {
-                top: 100,
-                bottom: 100,
-                left: 100,
-                right: 100,
-            }
         })
     }, [nodes])
 
@@ -36,50 +39,59 @@ export const ENSControlBar: React.FC<ENSControlBarProps> = ({nodes}) => {
     }, [nodes]);
     return (
         <>
-            <div className={"top-2 left-2 absolute z-50 flex space-x-1 "}>
-                <div className="z-50 bg-background rounded-md border p-3 w-[148px]">
-                    <div className="font-semibold text-sm">Profile Legend:</div>
-                    <ul className="text-xs sm:text-sm mt-2 space-y-1">
-                        <li className="flex items-center gap-2">
-                            <span className="inline-block w-4 h-4 rounded-full"
+            <Accordion type="single" collapsible className="top-2 left-2 absolute z-50 bg-background rounded-md border w-[140px]" defaultValue={"item-1"}>
+                <AccordionItem value="item-1">
+                    <AccordionTrigger className={"py-1 px-2"}>
+                        Legend
+                    </AccordionTrigger>
+                    <AccordionContent className={"p-0"}>
+                        <div className={" flex space-x-1 p-2 flex-1"}>
+                            <div>
+                                <div className="font-semibold text-xs">Card Legend:</div>
+                                <ul className="text-xs sm:text-xs space-y-1 mt-1">
+                                    <li className="flex items-center gap-2">
+                            <span className="inline-block w-3 h-3 rounded-full"
                                   style={{backgroundColor: getColor("text")}}></span>
-                            Text Changes
-                        </li>
-                        <li className="flex items-center gap-2">
-                            <span className="inline-block w-4 h-4 rounded-full"
+                                        Text Changes
+                                    </li>
+                                    <li className="flex items-center gap-2">
+                            <span className="inline-block w-3 h-3 rounded-full"
                                   style={{backgroundColor: getColor("addr")}}></span>
-                            Address Changes
-                        </li>
-                        <li className="flex items-center gap-2">
-                            <span className="inline-block w-4 h-4 rounded-full"
+                                        Address Changes
+                                    </li>
+                                    <li className="flex items-center gap-2">
+                            <span className="inline-block w-3 h-3 rounded-full"
                                   style={{backgroundColor: getColor("resolver")}}></span>
-                            Resolver Changed
-                        </li>
-                        <li className="flex items-center gap-2">
-                            <span className="inline-block w-4 h-4 rounded-full"
+                                        Resolver Changed
+                                    </li>
+                                    <li className="flex items-center gap-2">
+                            <span className="inline-block w-3 h-3 rounded-full"
                                   style={{backgroundColor: getColor("multi")}}></span>
-                            Multiple Changes
-                        </li>
-                    </ul>
+                                        Multiple Changes
+                                    </li>
+                                </ul>
 
-                    <div className="font-semibold text-sm mt-3">Data Legend:</div>
-                    <ul className="text-xs sm:text-sm mt-2 space-y-1">
-                        <li className="flex items-center gap-2">
-                            <span className="inline-block w-4 h-4 bg-green-500"></span>
-                            Added Records
-                        </li>
-                        <li className="flex items-center gap-2">
-                            <span className="inline-block w-4 h-4 bg-blue-500"></span>
-                            Updated Records
-                        </li>
-                        <li className="flex items-center gap-2">
-                            <span className="inline-block w-4 h-4 bg-red-500"></span>
-                            Removed Records
-                        </li>
-                    </ul>
-                </div>
-            </div>
-            <div className="top-2 left-[190px] absolute z-50 flex-1">
+                                <div className="font-semibold text-xs mt-1">Data Legend:</div>
+                                <ul className="text-xs sm:text-xs mt-2 space-y-1">
+                                    <li className="flex items-center gap-2">
+                                        <span className="inline-block w-3 h-3 bg-green-500"></span>
+                                        Added Records
+                                    </li>
+                                    <li className="flex items-center gap-2">
+                                        <span className="inline-block w-3 h-3 bg-blue-500"></span>
+                                        Updated Records
+                                    </li>
+                                    <li className="flex items-center gap-2">
+                                        <span className="inline-block w-3 h-3 bg-red-500"></span>
+                                        Removed Records
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </AccordionContent>
+                </AccordionItem>
+            </Accordion>
+            <div className="bottom-12 sm:bottom-4 right-4 absolute z-50 flex-1">
                 <div className="flex items-center space-x-1">
                     <TooltipProvider>
                         <Tooltip>
