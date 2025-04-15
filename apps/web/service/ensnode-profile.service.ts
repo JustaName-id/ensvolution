@@ -165,7 +165,7 @@ class ENSNodeProfileService {
       }
     `;
 
-        const response = await fetch("https://api.alpha.ensnode.io/ponder", {
+        const response = await fetch(serverEnv.ensnodeUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
