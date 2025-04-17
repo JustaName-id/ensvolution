@@ -6,7 +6,7 @@ export interface ResolverChange {
 }
 
 export interface ProfileRecord {
-  type: "text" | "addr" | "resolver";
+  type: "text" | "addr" | "resolver" | "contentHash";
   key: string;
   value: string;
 }
@@ -21,7 +21,7 @@ export interface ProfileState {
   cumulativeRecords: ProfileRecord[];
   resolverChange?: ResolverChange;
   resolverAddress?: string;
-  eventType?: "text" | "addr" | "resolver" | "multi" | "registration";
+  eventType?: "text" | "addr" | "resolver" | "multi" | "contentHash";
 }
 
 
@@ -35,7 +35,7 @@ export type ProfileStateWithChanges ={
   cumulativeRecords: ProfileRecord[];
   resolverChange?: ResolverChange;
   resolverAddress?: string;
-  eventType?: "text" | "addr" | "resolver" | "multi" | "registration";
+  eventType?: "text" | "addr" | "resolver" | "multi" | "contentHash" | "registration";
   changes: {
     added: ProfileRecord[],
     deleted: ProfileRecord[],

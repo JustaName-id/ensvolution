@@ -39,7 +39,7 @@ export const ENSControlBar: React.FC<ENSControlBarProps> = ({nodes}) => {
     }, [nodes]);
     return (
         <>
-            <Accordion type="single" collapsible className="top-2 left-2 absolute z-50 bg-background rounded-md border w-[140px]" defaultValue={"item-1"}>
+            <Accordion type="single" collapsible className="top-2 left-2 absolute z-50 bg-background rounded-md border w-[161px]" defaultValue={"item-1"}>
                 <AccordionItem value="item-1">
                     <AccordionTrigger className={"py-1 px-2"}>
                         Legend
@@ -63,6 +63,11 @@ export const ENSControlBar: React.FC<ENSControlBarProps> = ({nodes}) => {
                             <span className="inline-block w-3 h-3 rounded-full"
                                   style={{backgroundColor: getColor("resolver")}}></span>
                                         Resolver Changed
+                                    </li>
+                                    <li className="flex items-center gap-2">
+                            <span className="inline-block w-3 h-3 rounded-full"
+                                  style={{backgroundColor: getColor("contentHash")}}></span>
+                                        ContentHash Changed
                                     </li>
                                     <li className="flex items-center gap-2">
                             <span className="inline-block w-3 h-3 rounded-full"

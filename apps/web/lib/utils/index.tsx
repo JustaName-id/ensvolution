@@ -1,6 +1,6 @@
-import React from "react";
+import React, {useEffect} from "react";
 import { ProfileStateWithChanges, ProfileRecord } from "@/lib/types/ens-profile";
-import { getTextRecordIcon, getChainIcon } from '@justweb3/widget'
+import { getTextRecordIcon, getChainIcon, getContentHashIcon} from '@justweb3/widget'
 import {getCoinTypeDetails, SupportedCoins} from "@justaname.id/sdk";
 import {BaseIcon} from "@/components/BaseIcon";
 
@@ -14,6 +14,8 @@ export const getColor = (eventType: ProfileStateWithChanges["eventType"])=>{
             return "#efe830";
         case "multi":
             return "#B613C9";
+        case "contentHash":
+            return "#de296e";
         default:
             return "#e0e0e0";
     }
@@ -23,7 +25,8 @@ export const getColorByProfile = (data: ProfileStateWithChanges): string => {
     return getColor(data.eventType);
 };
 
-export const getRecordTypeIcon = (recordType: string, recordKey: string): React.ReactNode => {
+
+export const getRecordTypeIcon = (recordType: string, recordKey: string, recordValue?: string): React.ReactNode => {
     
     let element: React.ReactNode = null;
     switch (recordType) {
@@ -35,6 +38,9 @@ export const getRecordTypeIcon = (recordType: string, recordKey: string): React.
             break;
         case "resolver":
             element = getTextRecordIcon(recordKey)
+            break;
+        case "contentHash":
+            element = getContentHashIcon(recordKey)
             break;
         default:
             element = getTextRecordIcon(recordKey);

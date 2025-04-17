@@ -7,7 +7,7 @@ import {AlertTriangle, ZoomIn, ZoomOut, Map} from 'lucide-react';
 import {useENSFlow} from "@/hooks/use-ens-flow";
 import {Background, MiniMap, MiniMapNodeProps, ReactFlow, useReactFlow, useStore} from "@xyflow/react";
 import InstructionAlert from "@/components/InstructionAlert";
-import ENSProfileCard from "@/components/ENSProfileCard";
+import ENSProfileCard from "@/components/profile/ENSProfileCard";
 import ResolverCard from "@/components/ResolverCard";
 import ResolverLine from "@/components/ResolverLine";
 import {useFitNodes} from "@/hooks/use-fit-nodes";

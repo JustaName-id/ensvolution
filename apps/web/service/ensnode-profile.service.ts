@@ -22,7 +22,14 @@ const RESOLVER_ABI = [
         outputs: [{ internalType: "bytes", name: "", type: "bytes" }],
         stateMutability: "view",
         type: "function"
-    }
+    },
+    {
+        inputs: [{ internalType: "bytes32", name: "node", type: "bytes32" }],
+        name: "contenthash",
+        outputs: [{ internalType: "bytes", name: "", type: "bytes" }],
+        stateMutability: "view",
+        type: "function"
+    },
 ] as const;
 
 
@@ -40,6 +47,12 @@ interface MulticoinAddrChanged {
     transactionID: string;
 }
 
+interface ContenthashChanged {
+    hash: string;
+    blockNumber: number;
+    transactionID: string;
+}
+
 interface Resolver {
     address: string;
     textChangeds: {
@@ -47,6 +60,9 @@ interface Resolver {
     };
     multicoinAddrChangeds: {
         items: MulticoinAddrChanged[];
+    };
+    contenthashChangeds: {
+        items: ContenthashChanged[];
     };
 }
 
@@ -75,7 +91,7 @@ interface ENSNodeResponse {
 
 
 interface Event {
-    type: "text" | "addr" | "resolver";
+    type: "text" | "addr" | "resolver" | "contentHash";
     key: string;
     value: string | null;
     blockNumber: number;
@@ -84,7 +100,6 @@ interface Event {
     resolverId?: string;
     nameHash?: Address; 
 }
-
 
 interface PendingNullCheck {
     event: Event;
@@ -129,41 +144,48 @@ class ENSNodeProfileService {
 
     private async fetchENSNodeData(ensName: string): Promise<ENSNodeResponse> {
         const query = `
-      query GetDomain {
-        domains(where: {name: "${ensName}"}) {
-          items {
-            id
-            name
-            newResolvers {
+          query GetDomain {
+            domains(where: {name: "${ensName}"}) {
               items {
-                resolverId
-                blockNumber
-                transactionID
-                resolver {
-                  address
-                  textChangeds {
-                    items {
-                      key
-                      value
-                      blockNumber
-                      transactionID
-                    }
-                  }
-                  multicoinAddrChangeds {
-                    items {
-                      coinType
-                      addr
-                      blockNumber
-                      transactionID
+                id
+                name
+                newResolvers {
+                  items {
+                    resolverId
+                    blockNumber
+                    transactionID
+                    resolver {
+                      address
+                      textChangeds {
+                        items {
+                          key
+                          value
+                          blockNumber
+                          transactionID
+                        }
+                      }
+                      multicoinAddrChangeds {
+                        items {
+                          coinType
+                          addr
+                          blockNumber
+                          transactionID
+                        }
+                      }
+                      contenthashChangeds {
+                          items {
+                            hash
+                            blockNumber
+                            transactionID
+                          }
+                        }
                     }
                   }
                 }
               }
             }
           }
-        }
-      }
-    `;
+        `;
 
         const response = await fetch(serverEnv.ensnodeUrl, {
             method: 'POST',
@@ -184,7 +206,6 @@ class ENSNodeProfileService {
         
         const allEvents: Event[] = [];
 
-        
         for (const resolverItem of domain.newResolvers.items) {
             
             allEvents.push({
@@ -197,7 +218,6 @@ class ENSNodeProfileService {
                 resolverId: resolverItem.resolverId,
                 nameHash: nameHash,
             });
-
             
             for (const textChanged of resolverItem.resolver.textChangeds.items) {
                 allEvents.push({
@@ -224,9 +244,19 @@ class ENSNodeProfileService {
                     nameHash: nameHash,
                 });
             }
+            
+            for(const contenthashChanged of resolverItem.resolver.contenthashChangeds.items) {
+                allEvents.push({
+                    type: "contentHash",
+                    key: "contentHash",
+                    value: contenthashChanged.hash,
+                    blockNumber: contenthashChanged.blockNumber,
+                    transactionID: contenthashChanged.transactionID,
+                    resolverAddress: resolverItem.resolver.address,
+                })
+            }
         }
 
-        
         allEvents.sort((a, b) => {
             if (a.blockNumber !== b.blockNumber) {
                 return a.blockNumber - b.blockNumber;
@@ -243,7 +273,7 @@ class ENSNodeProfileService {
             return 0;
         });
 
-        
+
         const eventsByTransaction: { [key: string]: Event[] } = {};
         for (const event of allEvents) {
             if (!eventsByTransaction[event.transactionID]) {
@@ -253,10 +283,10 @@ class ENSNodeProfileService {
             eventsByTransaction[event.transactionID]!.push(event);
         }
 
-        
+
         const profileStates: ProfileState[] = [];
 
-        
+
         let currentResolverAddress: string | null = null;
         const recordsByResolver: { [key: string]: Map<string, ProfileRecord> } = {};
         let stateCounter = 0;
@@ -279,7 +309,7 @@ class ENSNodeProfileService {
             
             let createNewState = false;
             let resolverChangeInfo: ResolverChange | undefined = undefined;
-            let eventType: "text" | "addr" | "resolver" | "multi" = "text";
+            let eventType: "text" | "addr" | "resolver" | "multi" | "contentHash" = "text";
 
             
             if (resolverChange) {
@@ -318,11 +348,16 @@ class ENSNodeProfileService {
             
             const hasTextEvents = nonResolverEvents.some(e => e.type === "text");
             const hasAddrEvents = nonResolverEvents.some(e => e.type === "addr");
-
-            if (hasTextEvents && hasAddrEvents) {
+            const hasContentHashEvents = nonResolverEvents.some(e => e.type === "contentHash");
+            const isMulti = [hasTextEvents, hasAddrEvents, hasContentHashEvents].filter(Boolean).length;
+            if (isMulti > 1) {
                 eventType = "multi";
+            } else if (hasTextEvents) {
+                eventType = "text";
             } else if (hasAddrEvents) {
                 eventType = "addr";
+            } else if (hasContentHashEvents) {
+                eventType = "contentHash";
             }
 
             
@@ -341,10 +376,8 @@ class ENSNodeProfileService {
                         
                         const currentRecords = recordsByResolver[currentResolverAddress];
 
-                        
-                        const recordKey = `${event.type}:${event.key}`;
+                        let recordKey = `${event.type}:${event.key}`;
 
-                        
                         const existingRecord = currentRecords?.get(recordKey);
                         if (existingRecord && existingRecord.value === (event.value || "")) {
                             continue;

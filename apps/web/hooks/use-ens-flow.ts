@@ -1,8 +1,32 @@
 import {ChangesEdge, LineNode, ProfileNode, ProfileRecord, ProfileState, ResolverNode} from "@/lib/types/ens-profile";
-import {useContractName} from "@/hooks/use-contract-name";
 import {getCoderByCoinType} from "@ensdomains/address-encoder";
 import {hexToBytes} from "@ensdomains/address-encoder/utils";
 import {Address} from "viem";
+import { decode, getCodec } from "@ensdomains/content-hash";
+
+export const constructContentHash = (value: string): {link: string, coder: string} => {
+    try {
+        const coder = getCodec(value)
+        const decoded = decode(value)
+        let link = coder + "://" + decoded
+
+        if(link.startsWith("ipfs://")) {
+            link = "https://ipfs.io/ipfs/" + decoded
+        }
+
+        return {
+            link: link,
+            coder: coder || "contentHash"
+        }
+
+    }catch (e){
+        return {
+            link: value,
+            coder: "contentHash"
+        }
+    }
+}
+
 
 export const useENSFlow = (profileStates: ProfileState[] | undefined = []): {
     nodes: ProfileNode[],
@@ -16,7 +40,6 @@ export const useENSFlow = (profileStates: ProfileState[] | undefined = []): {
     let resolverNodes: ResolverNode[] = [];
     let lineNodes: LineNode[] = [];
 
-    const {getContractName} = useContractName()
     const uniqueResolvers = new Set<string>()
 
     profileStates.forEach(profile => {
@@ -33,10 +56,11 @@ export const useENSFlow = (profileStates: ProfileState[] | undefined = []): {
             (current.currentUpdatedRecords?.length || 0) > (prev?.currentUpdatedRecords?.length || 0) ? current : prev, profiles[0]
         )
         let biggestChange = biggestProfile?.currentUpdatedRecords?.length || 0
-        const resolverChangedStates = profiles.filter(p => p.resolverChange)
-        for (const resolverChange of resolverChangedStates) {
-            biggestChange = Math.max(biggestChange, resolverChange.cumulativeRecords?.length + 1 || 0)
-        }
+        // const resolverChangedStates = profiles.filter(p => p.resolverChange)
+        // for (const resolverChange of resolverChangedStates) {
+        //     // biggestChange = Math.max(biggestChange, resolverChange.cumulativeRecords?.length + 1 || 0)
+        //     // biggestChange
+        // }
 
         biggestProfilePerResolver.set(resolver, biggestChange)
     })
@@ -72,6 +96,18 @@ export const useENSFlow = (profileStates: ProfileState[] | undefined = []): {
                         value:  getCoderByCoinType(parseInt(key)).encode(hexToBytes(value as Address))
                     }
                 }
+
+                if(type === "contentHash" && value){
+                    const { link, coder } = constructContentHash(value)
+                    return {
+                        type,
+                        key: coder,
+                        value: link
+                    }
+                }
+
+
+
                 return {
                     type,
                     key,
@@ -86,6 +122,16 @@ export const useENSFlow = (profileStates: ProfileState[] | undefined = []): {
                         value:  getCoderByCoinType(parseInt(key)).encode(hexToBytes(value as Address))
                     }
                 }
+
+                if(type === "contentHash" && value){
+                    const { link, coder } = constructContentHash(value)
+                    return {
+                        type,
+                        key: coder,
+                        value: link
+                    }
+                }
+
                 return {
                     type,
                     key,
@@ -155,8 +201,9 @@ export const useENSFlow = (profileStates: ProfileState[] | undefined = []): {
                 cumulativeRecords: profileState.cumulativeRecords,
                 resolverChange: profileState.resolverChange,
                 resolverAddress: profileState.resolverAddress,
-                eventType: profileState.eventType === "resolver" ?
-                    profileState.currentUpdatedRecords ? "registration" : "resolver" : profileState.eventType,
+                // eventType: profileState.eventType === "resolver" ?
+                //     profileState.currentUpdatedRecords ? "registration" : "resolver" : profileState.eventType,
+                eventType: profileState.eventType,
             },
             height: 105 + (nbOfChanges <= 1 ? 0 : nbOfChanges) * 48,
             
