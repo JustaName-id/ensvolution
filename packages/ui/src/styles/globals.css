@@ -31,14 +31,17 @@ body {
   margin: 0 !important;
   left: 20px !important;
   bottom: 20px !important;
+  width: 200px;
+  box-sizing: border-box;
 }
 
 @media screen and (max-width: 768px) {
-  .react-flow__minimap {
+  .react-flow__panel {
     bottom: 3rem !important;
+    width: 133px;
   }
 
-  .react-flow__minimap > svg {
+  .react-flow__panel > svg {
     height: 100px;
     width: 133px;
   }
