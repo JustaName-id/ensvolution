@@ -116,7 +116,7 @@ export const Navbar: React.FC<NavbarProps>  = ()=> {
                   control={form.control}
                   name="ensName"
                   render={({ field }) => (
-                      <FormItem className={"flex-1 min-[200px]"}>
+                      <FormItem className={"flex-1 sm:min-w-[200px]"}>
                         <FormControl>
                           <Input placeholder="nick.eth" {...field} className={"h-[38px] min-w-30 flex-1 box-border!"} />
                         </FormControl>

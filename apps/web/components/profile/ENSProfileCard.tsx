@@ -1,4 +1,4 @@
-import React, {memo} from "react";
+import React, {memo, useMemo} from "react";
 import {ProfileNode} from "@/lib/types/ens-profile";
 import {formatDate, getColorByProfile, getRecordTypeIcon, truncateString,} from "@/lib/utils";
 import {Handle, NodeProps, Position, useReactFlow} from "@xyflow/react";
@@ -6,12 +6,33 @@ import {Diff, PlusCircle, Trash2} from 'lucide-react'
 import {useENS} from "@/providers/ENSProvider";
 import {useSidebar} from "@workspace/ui/components/sidebar";
 import {RecordDisplay} from "@/components/profile/RecordDisplay";
+import {EnsAvatar} from "@/components/ENSAvatar";
+import {useEnsAvatar} from "@/hooks/use-ens-avatar";
 
 
 const ENSProfileCard = ({data, id}: NodeProps<ProfileNode>) => {
     const {changeSelectedProfile, selectedProfile} = useENS();
     const {handleSidebarChange, isSidebarOpen} = useSidebar();
     const { fitView } = useReactFlow()
+    
+    const textRecords = useMemo(() => {
+        return data.cumulativeRecords.filter(record => record.type==="text")
+    },[data])
+    
+    const avatar = useMemo(()=> {
+        return textRecords.find(record => record.key === 'avatar')?.value;
+    },[data])
+    
+    // const banner = useMemo(()=> {
+    //     return textRecords.find(record => record.key === 'banner')?.value;
+    // },[data])
+    //
+    // const header = useMemo(()=> {
+    //     return textRecords.find(record => record.key === 'header')?.value;
+    // },[data])
+    //
+    // const {data: headerLink } = useEnsAvatar(header)
+    // const { data: bannerLink } = useEnsAvatar(banner)
 
     const handleClick = () => {
         changeSelectedProfile(data);
@@ -32,6 +53,21 @@ const ENSProfileCard = ({data, id}: NodeProps<ProfileNode>) => {
         data.changes.updated.length > 0 ||
         data.resolverChange;
 
+    const parsedEventType = useMemo(() => {
+        switch(data.eventType){
+            case "text": return "Text"
+            case "addr": return "Address"
+            case "contentHash": return "Content Hash"
+            case "multi": return "Multiple"
+            case "resolver": return "Resolver"
+        }
+    },[data])
+
+    const parsedChanges = useMemo(() => {
+        if(!data?.currentUpdatedRecords) return "change"
+        return data?.currentUpdatedRecords?.length > 1  ? "changes" : "change"
+    },[data])
+
     return (
         <div
             className={`w-64 rounded-lg overflow-hidden shadow-md bg-white cursor-pointer ${(selectedProfile?.id === data.id && isSidebarOpen) ? " border-b-4 border-t-4" : "border-t-4"}`}
@@ -40,10 +76,15 @@ const ENSProfileCard = ({data, id}: NodeProps<ProfileNode>) => {
             }}
             onClick={handleClick}
         >
-            <div className="px-4 py-2 bg-gray-50 border-b">
-                <div className="text-sm font-medium text-gray-700">{data.name}</div>
-                <div className="flex justify-between items-center">
-                    <div className="text-xs text-gray-500">{formatDate(data.timestamp)} • {data.eventType} change</div>
+            <div className="px-3 py-2 space-x-1 bg-gray-50 border-b flex flex-row">
+                <div className={"w-6 h-6 rounded-full my-auto bg-gray-500 flex items-center justify-center"}>
+                      <EnsAvatar recordValue={avatar} />
+                </div>
+                <div>
+                    <div className="text-sm font-medium text-gray-700">{data.name}</div>
+                    <div className="flex justify-between items-center">
+                        <div className="text-xs text-gray-500">{formatDate(data.timestamp)} • {parsedEventType} {parsedChanges}</div>
+                    </div>
                 </div>
             </div>
 

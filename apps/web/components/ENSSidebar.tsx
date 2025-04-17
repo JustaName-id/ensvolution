@@ -122,11 +122,11 @@ const ENSSidebar: React.FC<ENSSidebarProps> = () => {
                         {renderProfileDetail("Resolver Name", contractName)}
                         {renderProfileDetail("Resolver Address", renderExternalLink(
                             "https://etherscan.io/address/" + selectedProfile.resolverAddress,
-                            selectedProfile?.resolverAddress?.substring(0, 15) + "..."
+                            selectedProfile?.resolverAddress?.substring(0, 25) + "..."
                         ))}
                         {renderProfileDetail("Transaction Hash", renderExternalLink(
                             "https://etherscan.io/tx/" + selectedProfile.transactionHash,
-                            selectedProfile.transactionHash.substring(0, 15) + "..."
+                            selectedProfile.transactionHash.substring(0, 25) + "..."
                         ))}
                     </div>
                 </div>
