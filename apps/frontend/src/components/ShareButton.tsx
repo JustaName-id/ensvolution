@@ -52,7 +52,7 @@ export const ShareButton: React.FC<RecordNodesButtonProps> = ({ ensName }) => {
       setTimeout(() => {
         setIsJumping(false);
       }, 500);
-    }, 10000);
+    }, 5000);
 
     const initialJumpTimeout = setTimeout(() => {
       setIsJumping(true);
