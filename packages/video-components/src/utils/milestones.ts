@@ -82,10 +82,8 @@ export function getFirstCustomField(profileStates: ProfileStateWithChanges[]) {
 export function getStats(profileStates: ProfileStateWithChanges[]) {
   let addressChanges = 0, profileRecordChanges = 0, resolverChanges = 0, contentHashChanges = 0;
   for (const state of profileStates) {
-    console.log(state);
     if(state.id===0) continue;
     if (state.eventType === 'resolver') {
-      console.log(state);
       resolverChanges++;
       continue;
     }
