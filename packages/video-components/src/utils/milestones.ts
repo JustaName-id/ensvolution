@@ -82,10 +82,22 @@ export function getFirstCustomField(profileStates: ProfileStateWithChanges[]) {
 export function getStats(profileStates: ProfileStateWithChanges[]) {
   let addressChanges = 0, profileRecordChanges = 0, resolverChanges = 0, contentHashChanges = 0;
   for (const state of profileStates) {
-    if (state.eventType === 'resolver') resolverChanges++;
-    profileRecordChanges += (state.currentUpdatedRecords || []).length;
-    addressChanges += (state.currentUpdatedRecords || []).filter(rec => rec.type === 'addr').length;
-    contentHashChanges += (state.currentUpdatedRecords || []).filter(rec => rec.type === 'contentHash').length;
+    console.log(state);
+    if(state.id===0) continue;
+    if (state.eventType === 'resolver') {
+      console.log(state);
+      resolverChanges++;
+      continue;
+    }
+    profileRecordChanges += (state.currentUpdatedRecords || []).filter(
+      (rec) => rec.type === 'text'
+    ).length;
+    addressChanges += (state.currentUpdatedRecords || []).filter(
+      (rec) => rec.type === 'addr'
+    ).length;
+    contentHashChanges += (state.currentUpdatedRecords || []).filter(
+      (rec) => rec.type === 'contentHash'
+    ).length;
   }
   return {addressChanges, profileRecordChanges, resolverChanges, contentHashChanges};
 }
