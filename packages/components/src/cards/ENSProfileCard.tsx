@@ -36,7 +36,7 @@ export const ENSProfileCard: React.FC<ENSProfileCardProps> = ({
         switch(data.eventType){
             case "text": return "Text"
             case "addr": return "Address"
-            case "contentHash": return "Content Hash"
+            case "contentHash": return "ContentHash"
             case "multi": return "Multiple"
             case "resolver": return "Resolver"
         }
