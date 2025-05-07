@@ -1,16 +1,13 @@
 import { z } from "zod";
-import { DownloadButton } from "./DownloadButton";
 import { ProgressBar } from "./ProgressBar";
 import { useRendering } from "../helpers/use-rendering";
 import { ensVideoSchema } from "@ensvolution/video-components/schemas";
 import { Button } from "@ensvolution/ui/components/button";
-import { v4 as uuidv4 } from 'uuid';
 
 export const RenderControls: React.FC<{
   inputProps: z.infer<typeof ensVideoSchema>;
 }> = ({ inputProps }) => {
   const { renderMedia, state, undo } = useRendering("ENSVideo", inputProps);
-
 
   const downloadUrl = (url: string, filename: string) => {
     const link = document.createElement('a');
@@ -36,16 +33,9 @@ export const RenderControls: React.FC<{
     else{
       await handleRender()
     }
-    // undo()
-    // await renderMedia();
-    //
-    // if(state.status==="done") {
-    //   if (state.url) {
-    //     downloadUrl(state.url, inputProps.ensName + '.mp4');
-    //     undo()
-    //   }
-    // }
   };
+
+
   return (
     <div className="flex w-full">
       <Button

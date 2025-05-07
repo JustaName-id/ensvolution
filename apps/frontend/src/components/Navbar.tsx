@@ -77,12 +77,12 @@ export const Navbar: React.FC<NavbarProps>  = ()=> {
       <div className="bg-background text-foreground px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between z-10 border-foreground/20 border-b">
 
         <div className="flex flex-row mb-4 sm:mb-0 sm:flex-col w-full place-content-between">
-          {/*<h1 className="text-xl font-bold">ENSvolution</h1>*/}
           <Image src={'/static/ensvolution.png'} alt={"logo"} width={100} height={30} />
-          <div className="block sm:hidden">
+          <div className="block sm:hidden space-x-3">
+            <ShareButton ensName={ensName} />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" className="ml-auto sm:ml-0">
+                <Button variant="outline" size="icon" className="h-[38px] w-[38px] ml-auto sm:ml-0">
                   <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
                   <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
                   <span className="sr-only">Toggle theme</span>
@@ -124,23 +124,24 @@ export const Navbar: React.FC<NavbarProps>  = ()=> {
             </form>
           </Form>
 
-          <ShareButton ensName={ensName} />
-
           <div className="hidden sm:block">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" className="ml-auto sm:ml-0">
-                  <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                  <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                  <span className="sr-only">Toggle theme</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setTheme("light")}>Light</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setTheme("dark")}>Dark</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setTheme("system")}>System</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="flex gap-3">
+              <ShareButton ensName={ensName} />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon" className="ml-auto sm:ml-0 h-[38px] w-[38px]">
+                    <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                    <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                    <span className="sr-only">Toggle theme</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setTheme("light")}>Light</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setTheme("dark")}>Dark</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setTheme("system")}>System</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </div>
       </div>

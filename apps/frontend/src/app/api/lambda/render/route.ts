@@ -40,7 +40,7 @@ export const POST = executeApi<RenderMediaOnLambdaOutput, typeof RenderRequest>(
       composition: body.id,
       inputProps: body.inputProps,
       imageFormat:"png",
-      scale:2,
+      scale:1.5,
       downloadBehavior: {
         type: "download",
         fileName: body.inputProps.ensName +".mp4",
