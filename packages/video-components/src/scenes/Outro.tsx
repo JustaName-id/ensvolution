@@ -113,9 +113,9 @@ const Outro: React.FC<OutroProps> = ({ score, riveFile}) => {
   return (
     <>
       <div className={"absolute"} style={{
-        left: '25%',
-        top: '40%',
-        right: '25%',
+        left: '29%',
+        top: '55%',
+        right: '29%',
         height: '30%',
         opacity: generalOpacity,
       }}>
@@ -123,7 +123,7 @@ const Outro: React.FC<OutroProps> = ({ score, riveFile}) => {
       </div>
       <div className={"absolute"} style={{
         left: '10%',
-        top: '58%',
+        top: '49%',
         right: '10%',
         height: '20%',
         display: 'flex',

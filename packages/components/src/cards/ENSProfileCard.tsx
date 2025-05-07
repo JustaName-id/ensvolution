@@ -51,7 +51,8 @@ export const ENSProfileCard: React.FC<ENSProfileCardProps> = ({
         <div
             className={`w-64 rounded-lg overflow-hidden shadow-md bg-white cursor-pointer ${selected ? " border-b-4 border-t-4" : "border-t-4"}`}
             style={{
-                borderColor: getColorByProfile(data)
+                borderColor: getColorByProfile(data),
+                height:'calc(100% - 1px)'
             }}
             onClick={handleClick}
         >

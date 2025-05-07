@@ -50,12 +50,16 @@ export const RenderControls: React.FC<{
     <div className="flex w-full">
       <Button
         disabled={state.status === 'invoking' || state.status === 'rendering'}
+        variant={state.status==="done" ? "default":"outline"}
         onClick={handleDownload}
+        style={{
+          width: state.status==="done" ? "100%" : undefined,
+        }}
       >
         { state.status === "done" ? "Download": "Render Video"}
       </Button>
 
-      {(state.status === 'rendering' || state.status === 'done') && (
+      {(state.status === 'rendering') && (
         <ProgressBar
           progress={state.status === 'rendering' ? state.progress : 1}
         />

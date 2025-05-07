@@ -23,7 +23,7 @@ const FirstCustom: React.FC<FirstCustomProps> = ({
   useEffect(() => {
     if(rive){
       rive.setTextRunValue("CustomKey", record.key)
-      rive.setTextRunValue("CustomValue", record.value.length > 275 ? record.value.slice(0, 275) + "..." : record.value)
+      rive.setTextRunValue("CustomValue", record.value.length > 230 ? record.value.slice(0, 230) + "..." : record.value)
       rive.setTextRunValue("Custom Date", timestamp.split("T")[0])
     }
   }, [record.key, record.value, rive, timestamp]);
