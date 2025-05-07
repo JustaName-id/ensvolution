@@ -1,0 +1,28 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "node",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "es2015",
+    "module": "esnext",
+    "lib": ["es2020", "dom"],
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@ensvolution/components/*": ["packages/components/src/*"],
+      "@ensvolution/constants": ["packages/constants/src/index.ts"],
+      "@ensvolution/helpers": ["packages/helpers/src/index.ts"],
+      "@ensvolution/hooks/*": ["packages/hooks/src/*"],
+      "@ensvolution/types": ["packages/types/src/index.ts"],
+      "@ensvolution/ui/*": ["packages/ui/src/*"],
+      "@ensvolution/video-components/*": ["packages/video-components/src/*"]
+    }
+  },
+  "exclude": ["node_modules", "tmp"]
+}

@@ -1,0 +1,18 @@
+{
+  "name": "@ensvolution/video-components",
+  "version": "0.0.1",
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    "./*": [
+      "./src/*.tsx",
+      "./src/*.ts",
+      "./src/*/*.ts",
+      "./src/*/*.tsx"
+    ],
+    "./schemas": "./src/schemas/index.ts",
+    "./config": "./src/utils/video-config.ts",
+    "./utils": "./src/utils/index.ts",
+    "./milestones": "./src/utils/milestones.ts"
+  }
+}

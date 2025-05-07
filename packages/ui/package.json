@@ -1,0 +1,13 @@
+{
+  "name": "@ensvolution/ui",
+  "version": "0.0.1",
+  "type": "module",
+  "exports": {
+    "./globals.css": "./src/styles/globals.css",
+    "./postcss.config": "./postcss.config.mjs",
+    "./lib/*": "./src/lib/*.ts",
+    "./components/*": "./src/components/*.tsx",
+    "./common/*": "./src/common/*.tsx",
+    "./hooks/*": "./src/hooks/*.ts"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "name": "video",
+  "version": "1.0.0",
+  "description": "My Remotion video",
+  "scripts": {
+    "dev": "remotion studio",
+    "build": "remotion bundle",
+    "upgrade": "remotion upgrade",
+    "lint": "eslint src && tsc",
+    "deploy": "node deploy.mjs"
+  },
+  "repository": {},
+  "license": "UNLICENSED",
+  "private": true
+}
