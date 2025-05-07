@@ -11,7 +11,7 @@ export const ProgressBar: React.FC<{
 
   return (
     <div className={"flex w-full"}>
-      <div className="w-full h-2.5 rounded-md bg-gray-100 appearance-none bg-unfocused-border-color my-auto mx-2">
+      <div className="w-full h-2.5 rounded-md bg-gray-100 dark:bg-gray-800 appearance-none bg-unfocused-border-color my-auto mx-2">
         <div
           className="bg-foreground h-2.5 rounded-md transition-all ease-in-out duration-100"
           style={fill}
