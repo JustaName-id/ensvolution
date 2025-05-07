@@ -1,5 +1,7 @@
 import ENSNodeProfileService from "@/service/ensnode-profile.service";
 
+export const maxDuration = 30
+
 export async function GET(req: Request) {
     const url = new URL(req.url);
     const ensName = url.searchParams.get('ensName');
