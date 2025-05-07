@@ -68,8 +68,7 @@ export function getFirstCustomField(profileStates: ProfileStateWithChanges[]) {
     for (const rec of (state.cumulativeRecords ?? [])) {
       if(rec.type !=='text') continue;
       const k = rec.key?.toLowerCase();
-      // if(k ==="snapshot") continue
-      // if(k ==="eth.ens.delegate") continue
+      if(k ==="name") continue
       if(!SUPPORTED_SOCIALS.some(social => social.identifier === k) && !GENERAL_FIELDS.some(field => field.identifier === k)) customRecs.push(
         {record:rec, timestamp: state.timestamp}
       )
