@@ -6,8 +6,6 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const ensName = url.searchParams.get('ensName');
 
-  const normalisedEnsName = ensName;
-
   if (!ensName) {
     return new Response('ensName is required', { status: 400 });
   }
