@@ -1,16 +1,18 @@
 import { serverEnv } from '@/config/serverEnv';
-import { Address, createPublicClient, http, parseAbi } from 'viem';
+import { Address, createPublicClient, http, parseAbi, zeroAddress } from 'viem';
+import { normalize } from 'viem/ens';
 import { mainnet } from 'viem/chains';
 import { multicall } from 'viem/actions';
 import { namehash } from '@ensdomains/ensjs/utils';
 import {
   ProfileRecord,
-  ProfileState, ProfileStateWithChanges,
-  ResolverChange
-} from "@ensvolution/types";
-import { getCoderByCoinType } from "@ensdomains/address-encoder";
-import { hexToBytes } from "@ensdomains/address-encoder/utils";
-import { decode, getCodec } from "@ensdomains/content-hash";
+  ProfileState,
+  ProfileStateWithChanges,
+  ResolverChange,
+} from '@ensvolution/types';
+import { getCoderByCoinType } from '@ensdomains/address-encoder';
+import { hexToBytes } from '@ensdomains/address-encoder/utils';
+import { decode, getCodec } from '@ensdomains/content-hash';
 
 const MULTICALL_DEPLOYMENT_BLOCK = 14353601;
 const RPC_ENDPOINT = serverEnv.mainnetProvider;
@@ -157,7 +159,8 @@ class ENSNodeProfileService {
 
       const sanitizedStates = await this.sanitizeStates(processedState);
 
-      const profileStatesWithChanges = this.calculateProfileChanges(sanitizedStates)
+      const profileStatesWithChanges =
+        this.calculateProfileChanges(sanitizedStates);
       return profileStatesWithChanges;
     } catch (error) {
       console.error('Error retrieving profile states:', error);
@@ -165,61 +168,78 @@ class ENSNodeProfileService {
     }
   }
 
-  private calculateProfileChanges(profileStates: ProfileState[]): ProfileStateWithChanges[] {
+  private calculateProfileChanges(
+    profileStates: ProfileState[]
+  ): ProfileStateWithChanges[] {
     const profileStatesWithChanges: ProfileStateWithChanges[] = [];
     for (const profileState of profileStates) {
-      const hasResolver = !!profileState.resolverAddress
-      if (!hasResolver) continue
+      const hasResolver = !!profileState.resolverAddress;
+      if (!hasResolver) continue;
 
-      let added: ProfileRecord[] = []
-      let deleted: ProfileRecord[] = []
-      let updated: ProfileRecord[] = []
+      let added: ProfileRecord[] = [];
+      let deleted: ProfileRecord[] = [];
+      let updated: ProfileRecord[] = [];
 
       if (!profileState.resolverChange) {
         if (profileState.currentUpdatedRecords) {
-          const prevState = profileStates.find(p => p.id === profileState.id - 1)
+          const prevState = profileStates.find(
+            (p) => p.id === profileState.id - 1
+          );
 
           if (prevState) {
             if (prevState.resolverAddress !== profileState.resolverAddress) {
               added = profileState.cumulativeRecords;
             } else {
-              deleted = profileState.currentUpdatedRecords.filter(r =>
-                r.value === ""
-              ).map(r => {
-                return {
-                  type: r.type,
-                  key: r.key,
-                  value: prevState?.cumulativeRecords.find(pr => pr.type === r.type && pr.key === r.key)?.value || "",
-                  rawValue: prevState?.cumulativeRecords.find(pr => pr.type === r.type && pr.key === r.key)?.rawValue || "",
-                }
-              })
+              deleted = profileState.currentUpdatedRecords
+                .filter((r) => r.value === '')
+                .map((r) => {
+                  return {
+                    type: r.type,
+                    key: r.key,
+                    value:
+                      prevState?.cumulativeRecords.find(
+                        (pr) => pr.type === r.type && pr.key === r.key
+                      )?.value || '',
+                    rawValue:
+                      prevState?.cumulativeRecords.find(
+                        (pr) => pr.type === r.type && pr.key === r.key
+                      )?.rawValue || '',
+                  };
+                });
 
               added = profileState.currentUpdatedRecords.filter(
-                r => prevState?.cumulativeRecords.find(pr => pr.type === r.type && pr.key === r.key) === undefined
-              )
+                (r) =>
+                  prevState?.cumulativeRecords.find(
+                    (pr) => pr.type === r.type && pr.key === r.key
+                  ) === undefined
+              );
 
-              updated = profileState.currentUpdatedRecords.filter(r =>
-                prevState?.cumulativeRecords.find(pr => pr.type === r.type && pr.key === r.key) &&
-                prevState?.cumulativeRecords.find(pr => pr.type === r.type && pr.key === r.key)?.value !== r.value && r.value !== ""
-              )
+              updated = profileState.currentUpdatedRecords.filter(
+                (r) =>
+                  prevState?.cumulativeRecords.find(
+                    (pr) => pr.type === r.type && pr.key === r.key
+                  ) &&
+                  prevState?.cumulativeRecords.find(
+                    (pr) => pr.type === r.type && pr.key === r.key
+                  )?.value !== r.value &&
+                  r.value !== ''
+              );
             }
           }
         }
       }
-
 
       profileStatesWithChanges.push({
         ...profileState,
         changes: {
           added,
           updated,
-          deleted
-        }
-      })
-
+          deleted,
+        },
+      });
     }
 
-    return profileStatesWithChanges
+    return profileStatesWithChanges;
   }
 
   private namehash(name: string): Address {
@@ -322,35 +342,36 @@ class ENSNodeProfileService {
     }
   };
 
-  private  constructContentHash = (value: string): {link: string, coder: string} => {
+  private constructContentHash = (
+    value: string
+  ): { link: string; coder: string } => {
     try {
-      const coder = getCodec(value)
-      const decoded = decode(value)
-      let link = coder + "://" + decoded
+      const coder = getCodec(value);
+      const decoded = decode(value);
+      let link = coder + '://' + decoded;
 
-      if(link.startsWith("ipfs://")) {
-        link = "https://ipfs.io/ipfs/" + decoded
+      if (link.startsWith('ipfs://')) {
+        link = 'https://ipfs.io/ipfs/' + decoded;
       }
 
       return {
         link: link,
-        coder: coder || "contentHash"
-      }
-
-    }catch (e){
+        coder: coder || 'contentHash',
+      };
+    } catch (e) {
       return {
         link: value,
-        coder: "contentHash"
-      }
+        coder: 'contentHash',
+      };
     }
-  }
+  };
 
   private async sanitizeStates(
     states: ProfileState[]
   ): Promise<ProfileState[]> {
     const sanitizedStates: ProfileState[] = [];
 
-    const cached= new Map<string, string>()
+    const cached = new Map<string, string>();
 
     for (const state of states) {
       const newState: ProfileState = {
@@ -368,7 +389,7 @@ class ENSNodeProfileService {
             }
             const resolvedAvatar = await this.resolveEnsAvatar(record.rawValue);
 
-            cached.set(record.rawValue, resolvedAvatar || record.rawValue)
+            cached.set(record.rawValue, resolvedAvatar || record.rawValue);
             return {
               ...record,
               value: resolvedAvatar || record.rawValue,
@@ -376,20 +397,21 @@ class ENSNodeProfileService {
           }
 
           if (record.type === 'addr' && record.rawValue) {
-
             return {
               ...record,
-              value: getCoderByCoinType(parseInt(record.key)).encode(hexToBytes(record.rawValue as Address))
+              value: getCoderByCoinType(parseInt(record.key)).encode(
+                hexToBytes(record.rawValue as Address)
+              ),
             };
           }
 
-          if (record.type === 'contentHash'  && record.rawValue) {
+          if (record.type === 'contentHash' && record.rawValue) {
             const { link, coder } = this.constructContentHash(record.value);
             return {
               ...record,
               key: coder,
-              value: link
-            }
+              value: link,
+            };
           }
 
           return record;
@@ -399,41 +421,47 @@ class ENSNodeProfileService {
       }
 
       if (state.currentUpdatedRecords) {
-        const recordPromises = state.currentUpdatedRecords.map(async (record) => {
-          if (record.type === 'text' && record.key === 'avatar') {
-            if (cached.has(record.rawValue)) {
+        const recordPromises = state.currentUpdatedRecords.map(
+          async (record) => {
+            if (record.type === 'text' && record.key === 'avatar') {
+              if (cached.has(record.rawValue)) {
+                return {
+                  ...record,
+                  value: cached.get(record.rawValue) || record.rawValue,
+                };
+              }
+              const resolvedAvatar = await this.resolveEnsAvatar(
+                record.rawValue
+              );
+
+              cached.set(record.rawValue, resolvedAvatar || record.rawValue);
               return {
                 ...record,
-                value: cached.get(record.rawValue) || record.rawValue,
+                value: resolvedAvatar || record.rawValue,
               };
             }
-            const resolvedAvatar = await this.resolveEnsAvatar(record.rawValue);
 
-            cached.set(record.rawValue, resolvedAvatar || record.rawValue)
-            return {
-              ...record,
-              value: resolvedAvatar || record.rawValue,
-            };
-          }
-
-          if (record.type === 'addr' && record.rawValue) {
-            return {
-              ...record,
-              value: getCoderByCoinType(parseInt(record.key)).encode(hexToBytes(record.rawValue as Address))
-            };
-          }
-
-          if (record.type === 'contentHash'  && record.rawValue) {
-            const { link, coder } = this.constructContentHash(record.value);
-            return {
-              ...record,
-              key: coder,
-              value: link
+            if (record.type === 'addr' && record.rawValue) {
+              return {
+                ...record,
+                value: getCoderByCoinType(parseInt(record.key)).encode(
+                  hexToBytes(record.rawValue as Address)
+                ),
+              };
             }
-          }
 
-          return record;
-        });
+            if (record.type === 'contentHash' && record.rawValue) {
+              const { link, coder } = this.constructContentHash(record.value);
+              return {
+                ...record,
+                key: coder,
+                value: link,
+              };
+            }
+
+            return record;
+          }
+        );
 
         newState.currentUpdatedRecords = await Promise.all(recordPromises);
       }
@@ -445,9 +473,10 @@ class ENSNodeProfileService {
   }
 
   private async fetchENSNodeData(ensName: string): Promise<ENSNodeResponse> {
+    const normalisedEnsName = normalize(ensName);
     const query = `
           query GetDomain {
-            domains(where: {name: "${ensName}"}) {
+            domains(where: {name: "${normalisedEnsName}"}) {
               items {
                 id
                 name
@@ -511,6 +540,10 @@ class ENSNodeProfileService {
     const allEvents: Event[] = [];
 
     for (const resolverItem of domain.newResolvers.items) {
+      if (resolverItem.resolverId === zeroAddress) {
+        continue;
+      }
+
       allEvents.push({
         type: 'resolver',
         key: 'resolver',
@@ -692,7 +725,6 @@ class ENSNodeProfileService {
 
             if (event.value === null) {
               pendingNullChecks.push({ event, recordKey });
-
             } else {
               const record: ProfileRecord = {
                 type: event.type,
@@ -963,8 +995,8 @@ class ENSNodeProfileService {
       changes: {
         added: [],
         updated: [],
-        deleted: []
-      }
+        deleted: [],
+      },
     };
   }
 }
