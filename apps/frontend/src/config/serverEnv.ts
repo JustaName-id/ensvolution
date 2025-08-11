@@ -12,7 +12,7 @@ export const serverEnvSchema = z.object({
   poapApiKey: z.string().optional(),
   talentProtocolApiKey: z.string().optional(),
   mainnetProvider: z.string().optional().default("https://eth.drpc.org"),
-  ensnodeUrl: z.string().optional().default("https://api.alpha.ensnode.io/ponder"),
+  ensnodeUrl: z.string().optional().default("https://api.alpha.ensnode.io/subgraph"),
   etherscanApiKey: z.string().optional(),
 });
 
