@@ -34,7 +34,9 @@ export default function RootLayout({
                     <Footer />
                 </Suspense>
             </main>
-            <ENSMainSidebar />
+            <Suspense fallback={null}>
+                <ENSMainSidebar />
+            </Suspense>
         </Providers>
       </body>
     </html>
