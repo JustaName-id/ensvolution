@@ -61,6 +61,8 @@ const RESOLVER_ABI = [
 ] as const;
 
 interface TextChanged {
+  __typename: 'TextChanged';
+  id: string;
   key: string;
   value: string | null;
   blockNumber: number;
@@ -68,6 +70,8 @@ interface TextChanged {
 }
 
 interface MulticoinAddrChanged {
+  __typename: 'MulticoinAddrChanged';
+  id: string;
   coinType: string;
   addr: string;
   blockNumber: number;
@@ -75,44 +79,31 @@ interface MulticoinAddrChanged {
 }
 
 interface ContenthashChanged {
+  __typename: 'ContenthashChanged';
+  id: string;
   hash: string;
   blockNumber: number;
   transactionID: string;
 }
 
 interface Resolver {
+  id: string;
   address: string;
-  textChangeds: {
-    items: TextChanged[];
-  };
-  multicoinAddrChangeds: {
-    items: MulticoinAddrChanged[];
-  };
-  contenthashChangeds: {
-    items: ContenthashChanged[];
-  };
+  events: (TextChanged | MulticoinAddrChanged | ContenthashChanged)[];
 }
 
-interface ResolverItem {
-  resolverId: string;
+interface NewResolver {
+  id: string;
   blockNumber: number;
   transactionID: string;
   resolver: Resolver;
 }
 
-interface Domain {
-  id: string;
-  name: string;
-  newResolvers: {
-    items: ResolverItem[];
-  };
-}
+
 
 interface ENSNodeResponse {
   data: {
-    domains: {
-      items: Domain[];
-    };
+    newResolvers: NewResolver[];
   };
 }
 
@@ -144,17 +135,14 @@ class ENSNodeProfileService {
 
       const response = await this.fetchENSNodeData(ensName);
 
-      if (!response?.data?.domains?.items?.length) {
+      if (!response?.data?.newResolvers?.length) {
         return [this.createFallbackProfile(ensName)];
       }
 
-      const domain = response.data.domains.items[0];
-      if (!domain) {
-        return [this.createFallbackProfile(ensName)];
-      }
-      const processedState = await this.processDomainsToProfileStates(
-        domain,
-        nameHash
+      const processedState = await this.processNewResolversToProfileStates(
+        response.data.newResolvers,
+        nameHash,
+        ensName
       );
 
       const sanitizedStates = await this.sanitizeStates(processedState);
@@ -474,49 +462,48 @@ class ENSNodeProfileService {
 
   private async fetchENSNodeData(ensName: string): Promise<ENSNodeResponse> {
     const normalisedEnsName = normalize(ensName);
+    
+    // Convert ENS name to namehash for Subgraph compatibility
+    const domainNamehash = this.namehash(normalisedEnsName);
+    
     const query = `
-          query GetDomain {
-            domains(where: {name: "${normalisedEnsName}"}) {
-              items {
+      query GetDomain {
+        newResolvers(where: {domain: "${domainNamehash}"}) {
+          id
+          blockNumber
+          transactionID
+          resolver {
+            id
+            address
+            events {
+              ... on TextChanged {
+                __typename
                 id
-                name
-                newResolvers {
-                  items {
-                    resolverId
-                    blockNumber
-                    transactionID
-                    resolver {
-                      address
-                      textChangeds {
-                        items {
-                          key
-                          value
-                          blockNumber
-                          transactionID
-                        }
-                      }
-                      multicoinAddrChangeds {
-                        items {
-                          coinType
-                          addr
-                          blockNumber
-                          transactionID
-                        }
-                      }
-                      contenthashChangeds {
-                          items {
-                            hash
-                            blockNumber
-                            transactionID
-                          }
-                        }
-                    }
-                  }
-                }
+                blockNumber
+                transactionID
+                key
+                value
+              }
+              ... on MulticoinAddrChanged {
+                __typename
+                id
+                blockNumber
+                transactionID
+                coinType
+                addr
+              }
+              ... on ContenthashChanged {
+                __typename
+                id
+                blockNumber
+                transactionID
+                hash
               }
             }
           }
-        `;
+        }
+      }
+    `;
 
     const response = await fetch(serverEnv.ensnodeUrl, {
       method: 'POST',
@@ -533,14 +520,15 @@ class ENSNodeProfileService {
     return await response.json();
   }
 
-  private async processDomainsToProfileStates(
-    domain: Domain,
-    nameHash: Address
+  private async processNewResolversToProfileStates(
+    newResolvers: NewResolver[],
+    nameHash: Address,
+    ensName: string
   ): Promise<ProfileState[]> {
     const allEvents: Event[] = [];
 
-    for (const resolverItem of domain.newResolvers.items) {
-      if (resolverItem.resolverId === zeroAddress) {
+    for (const resolverItem of newResolvers) {
+      if (resolverItem.resolver.address === zeroAddress) {
         continue;
       }
 
@@ -551,45 +539,46 @@ class ENSNodeProfileService {
         blockNumber: resolverItem.blockNumber,
         transactionID: resolverItem.transactionID,
         resolverAddress: resolverItem.resolver.address,
-        resolverId: resolverItem.resolverId,
+        resolverId: resolverItem.id,
         nameHash: nameHash,
       });
 
-      for (const textChanged of resolverItem.resolver.textChangeds.items) {
-        allEvents.push({
-          type: 'text',
-          key: textChanged.key,
-          value: textChanged.value,
-          blockNumber: textChanged.blockNumber,
-          transactionID: textChanged.transactionID,
-          resolverAddress: resolverItem.resolver.address,
-          nameHash: nameHash,
-        });
-      }
-
-      for (const addrChanged of resolverItem.resolver.multicoinAddrChangeds
-        .items) {
-        allEvents.push({
-          type: 'addr',
-          key: addrChanged.coinType,
-          value: addrChanged.addr === '0x' ? null : addrChanged.addr,
-          blockNumber: addrChanged.blockNumber,
-          transactionID: addrChanged.transactionID,
-          resolverAddress: resolverItem.resolver.address,
-          nameHash: nameHash,
-        });
-      }
-
-      for (const contenthashChanged of resolverItem.resolver.contenthashChangeds
-        .items) {
-        allEvents.push({
-          type: 'contentHash',
-          key: 'contentHash',
-          value: contenthashChanged.hash,
-          blockNumber: contenthashChanged.blockNumber,
-          transactionID: contenthashChanged.transactionID,
-          resolverAddress: resolverItem.resolver.address,
-        });
+      // Group events by __typename to match existing logic
+      for (const event of resolverItem.resolver.events) {
+        switch (event.__typename) {
+          case 'TextChanged':
+            allEvents.push({
+              type: 'text',
+              key: event.key,
+              value: event.value,
+              blockNumber: event.blockNumber,
+              transactionID: event.transactionID,
+              resolverAddress: resolverItem.resolver.address,
+              nameHash: nameHash,
+            });
+            break;
+          case 'MulticoinAddrChanged':
+            allEvents.push({
+              type: 'addr',
+              key: event.coinType,
+              value: event.addr === '0x' ? null : event.addr,
+              blockNumber: event.blockNumber,
+              transactionID: event.transactionID,
+              resolverAddress: resolverItem.resolver.address,
+              nameHash: nameHash,
+            });
+            break;
+          case 'ContenthashChanged':
+            allEvents.push({
+              type: 'contentHash',
+              key: 'contentHash',
+              value: event.hash,
+              blockNumber: event.blockNumber,
+              transactionID: event.transactionID,
+              resolverAddress: resolverItem.resolver.address,
+            });
+            break;
+        }
       }
     }
 
@@ -787,7 +776,7 @@ class ENSNodeProfileService {
           timestamp,
           transactionHash: transactionID,
           blockNumber: blockNumber.toString(),
-          name: domain.name,
+          name: ensName,
           currentUpdatedRecords:
             updatedRecords.length > 0 ? updatedRecords : undefined,
           cumulativeRecords: allRecords,
