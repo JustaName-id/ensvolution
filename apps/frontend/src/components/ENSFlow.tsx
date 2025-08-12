@@ -103,7 +103,7 @@ const ENSFlow: React.FC<ENSFlowProps> = ({
                 <Background gap={13} size={1} />
 
 
-                <ENSControlBar nodes={[...ensNodes, ...resolverNodes,...lineNodes]} />
+                <ENSControlBar nodes={[...ensNodes, ...resolverNodes,...lineNodes]} ensName={ensName} />
             </ReactFlow>
           </ReactFlowProvider>
         </div>

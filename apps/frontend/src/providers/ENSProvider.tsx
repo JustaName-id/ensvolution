@@ -4,11 +4,15 @@ import { ProfileStateWithChanges } from '@ensvolution/types';
 interface ENSContextProps {
     selectedProfile: ProfileStateWithChanges | null;
     changeSelectedProfile: (profile: ProfileStateWithChanges | null) => void;
+    showOwnershipChanges: boolean;
+    setShowOwnershipChanges: (show: boolean) => void;
 }
 
 const ENSContext = createContext<ENSContextProps>({
     selectedProfile: null,
-    changeSelectedProfile: () => {}
+    changeSelectedProfile: () => {},
+    showOwnershipChanges: false,
+    setShowOwnershipChanges: () => {}
 })
 
 interface ENSProviderProps {
@@ -20,6 +24,7 @@ export const ENSProvider: React.FC<ENSProviderProps> = ({
                                                         }) => {
 
     const [selectedProfile, setSelectedProfile] = useState<ProfileStateWithChanges | null>(null);
+    const [showOwnershipChanges, setShowOwnershipChanges] = useState<boolean>(false);
 
     const changeSelectedProfile = (_selectedProfile: ProfileStateWithChanges | null) => {
         setSelectedProfile(_selectedProfile);
@@ -28,7 +33,9 @@ export const ENSProvider: React.FC<ENSProviderProps> = ({
     return (
         <ENSContext value={{
             selectedProfile,
-            changeSelectedProfile
+            changeSelectedProfile,
+            showOwnershipChanges,
+            setShowOwnershipChanges
         }}>
             {children}
         </ENSContext>

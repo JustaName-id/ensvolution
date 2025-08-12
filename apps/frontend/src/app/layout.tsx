@@ -3,7 +3,7 @@ import "@ensvolution/ui/globals.css"
 import { Providers } from "@/providers/providers"
 import Navbar from "@/components/Navbar";
 import {Footer} from "@/components/Footer";
-import ENSSidebar from "@/components/ENSSidebar";
+import ENSMainSidebar from "@/components/ENSMainSidebar";
 import {Suspense} from "react";
 
 const fontSans = Geist({
@@ -34,7 +34,7 @@ export default function RootLayout({
                     <Footer />
                 </Suspense>
             </main>
-            <ENSSidebar />
+            <ENSMainSidebar />
         </Providers>
       </body>
     </html>

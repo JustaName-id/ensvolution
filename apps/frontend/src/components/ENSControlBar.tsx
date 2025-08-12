@@ -1,21 +1,24 @@
 import {useReactFlow, useStore} from "@xyflow/react";
 import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@ensvolution/ui/components/tooltip";
 import {Button} from "@ensvolution/ui/components/button";
-import {Map, ZoomIn, ZoomOut} from "lucide-react";
+import {Map, ZoomIn, ZoomOut, Users} from "lucide-react";
 import {Badge} from "@ensvolution/ui/components/badge";
 import React, {useCallback, useEffect} from "react";
 import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from "@ensvolution/ui/components/accordion";
 import {useIsMobile} from "@ensvolution/ui/hooks/use-mobile";
 import { LineNode, ProfileNode, ResolverNode } from '@ensvolution/types';
 import { getColor } from '@ensvolution/helpers';
+import { useENS } from '@/providers/ENSProvider';
 
 export interface ENSControlBarProps {
     nodes: (ResolverNode | LineNode | ProfileNode)[]
+    ensName?: string;
 }
 
-export const ENSControlBar: React.FC<ENSControlBarProps> = ({nodes}) => {
+export const ENSControlBar: React.FC<ENSControlBarProps> = ({nodes, ensName}) => {
     const {zoomOut, zoomIn, fitView} = useReactFlow()
     const {transform} = useStore(({transform}) => ({transform}));
+    const {showOwnershipChanges, setShowOwnershipChanges} = useENS();
     const isMobile = useIsMobile()
     const fit = useCallback(() => {
         if (nodes.length === 0) return
@@ -134,6 +137,21 @@ export const ENSControlBar: React.FC<ENSControlBarProps> = ({nodes}) => {
                                 </Button>
                             </TooltipTrigger>
                             <TooltipContent>Reset View</TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    size="icon"
+                                    variant={showOwnershipChanges ? "default" : "ghost"}
+                                    onClick={() => setShowOwnershipChanges(!showOwnershipChanges)}
+                                    className="h-8 w-8">
+                                    <Users size={16}/>
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                {showOwnershipChanges ? 'Hide' : 'Show'} Ownership History
+                            </TooltipContent>
                         </Tooltip>
                     </TooltipProvider>
                 </div>
