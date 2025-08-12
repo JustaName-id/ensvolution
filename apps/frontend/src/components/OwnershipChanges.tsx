@@ -1,35 +1,119 @@
-"use client";
+'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useOwnershipChanges } from '@ensvolution/hooks';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@ensvolution/ui/components/card';
-import { Badge } from '@ensvolution/ui/components/badge';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@ensvolution/ui/components/card';
 import { Skeleton } from '@ensvolution/ui/components/skeleton';
-import { Alert, AlertDescription, AlertTitle } from '@ensvolution/ui/components/alert';
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from '@ensvolution/ui/components/alert';
 import { ScrollArea } from '@ensvolution/ui/components/scroll-area';
 import { Separator } from '@ensvolution/ui/components/separator';
 import { Button } from '@ensvolution/ui/components/button';
-import { AlertTriangle, User, ArrowRight, Clock, Hash, X } from 'lucide-react';
+import {
+  AlertTriangle,
+  User,
+  Clock,
+  Hash,
+  X,
+  ExternalLink,
+} from 'lucide-react';
 import { useENS } from '@/providers/ENSProvider';
 import { useSidebar } from '@ensvolution/ui/components/sidebar';
 import OwnershipChangesService from '@/service/ownership-changes.service';
+import { createPublicClient, http } from 'viem';
+import { mainnet } from 'viem/chains';
+import { clientEnv } from '@/config/clientEnv';
 
 export interface OwnershipChangesProps {
   ensName: string;
   className?: string;
 }
 
+interface AddressDisplayInfo {
+  address: string;
+  name: string | null;
+  isLoading: boolean;
+}
+
 const OwnershipChanges: React.FC<OwnershipChangesProps> = ({
   ensName,
-  className = ""
+  className = '',
 }) => {
   const { setShowOwnershipChanges } = useENS();
   const { handleSidebarChange } = useSidebar();
+  const [addressInfo, setAddressInfo] = useState<
+    Record<string, AddressDisplayInfo>
+  >({});
+
+  // Create a simple viem client for ENS lookups
+  const client = useMemo(
+    () =>
+      createPublicClient({
+        chain: mainnet,
+        transport: http(clientEnv.mainnetProvider),
+      }),
+    []
+  );
 
   // Create service instance
   const serviceInstance = useMemo(() => new OwnershipChangesService(), []);
 
-  const { data: ownershipChanges, isLoading, error, isError } = useOwnershipChanges(ensName, serviceInstance);
+  const {
+    data: ownershipChanges,
+    isLoading,
+    error,
+    isError,
+  } = useOwnershipChanges(ensName, serviceInstance);
+
+  // Resolve ENS names for addresses using viem's built-in getEnsName
+  useEffect(() => {
+    if (!ownershipChanges || ownershipChanges.length === 0) return;
+
+    const resolveAddresses = async () => {
+      const uniqueAddresses = [
+        ...new Set(ownershipChanges.map((change) => change.ownerAddress)),
+      ];
+
+      for (const address of uniqueAddresses) {
+        if (addressInfo[address]) continue; // Skip if already resolved or resolving
+
+        // Set loading state
+        setAddressInfo((prev) => ({
+          ...prev,
+          [address]: { address, name: null, isLoading: true },
+        }));
+
+        try {
+          // Use viem's built-in getEnsName function
+          const ensName = await client.getEnsName({
+            address: address as `0x${string}`,
+          });
+
+          setAddressInfo((prev) => ({
+            ...prev,
+            [address]: { address, name: ensName, isLoading: false },
+          }));
+        } catch {
+          // Fallback to address if ENS resolution fails
+          setAddressInfo((prev) => ({
+            ...prev,
+            [address]: { address, name: null, isLoading: false },
+          }));
+        }
+      }
+    };
+
+    void resolveAddresses();
+  }, [ownershipChanges, client, addressInfo]);
 
   const handleClose = () => {
     setShowOwnershipChanges(false);
@@ -50,30 +134,42 @@ const OwnershipChanges: React.FC<OwnershipChangesProps> = ({
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
-  const getEventBadgeVariant = (eventType: string) => {
-    switch (eventType) {
-      case 'NewOwner':
-        return 'default';
-      case 'WrappedTransfer':
-        return 'secondary';
-      case 'Transfer':
-        return 'outline';
-      default:
-        return 'outline';
-    }
+  const getEtherscanTxUrl = (txHash: string) => {
+    return `https://etherscan.io/tx/${txHash}`;
   };
 
-  const getEventColor = (eventType: string) => {
-    switch (eventType) {
-      case 'NewOwner':
-        return 'text-blue-600';
-      case 'WrappedTransfer':
-        return 'text-purple-600';
-      case 'Transfer':
-        return 'text-green-600';
-      default:
-        return 'text-gray-600';
+  const getEtherscanAddressUrl = (address: string) => {
+    return `https://etherscan.io/address/${address}`;
+  };
+
+  const renderAddressDisplay = (address: string) => {
+    const info = addressInfo[address];
+
+    if (!info || info.isLoading) {
+      return (
+        <div className="flex items-center gap-1">
+          <Skeleton className="h-3 w-20" />
+          <ExternalLink className="h-3 w-3" />
+        </div>
+      );
     }
+
+    const displayText = info.name || formatAddress(address);
+
+    return (
+      <a
+        href={getEtherscanAddressUrl(address)}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center gap-1 text-sm hover:text-blue-600 transition-colors"
+      >
+        <User className="h-3 w-3" />
+        <span className="font-mono text-xs underline decoration-dotted">
+          {displayText}
+        </span>
+        <ExternalLink className="h-3 w-3" />
+      </a>
+    );
   };
 
   if (isLoading) {
@@ -85,12 +181,8 @@ const OwnershipChanges: React.FC<OwnershipChangesProps> = ({
               <User className="h-5 w-5" />
               Ownership History
             </CardTitle>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleClose}
-            >
-              <X size={18}/>
+            <Button variant="ghost" size="icon" onClick={handleClose}>
+              <X size={18} />
             </Button>
           </div>
           <CardDescription>
@@ -121,12 +213,8 @@ const OwnershipChanges: React.FC<OwnershipChangesProps> = ({
               <User className="h-5 w-5" />
               Ownership History
             </CardTitle>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleClose}
-            >
-              <X size={18}/>
+            <Button variant="ghost" size="icon" onClick={handleClose}>
+              <X size={18} />
             </Button>
           </div>
         </CardHeader>
@@ -135,7 +223,8 @@ const OwnershipChanges: React.FC<OwnershipChangesProps> = ({
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Error Loading Ownership Data</AlertTitle>
             <AlertDescription>
-              {error?.message || `Failed to load ownership history for ${ensName}`}
+              {error?.message ||
+                `Failed to load ownership history for ${ensName}`}
             </AlertDescription>
           </Alert>
         </CardContent>
@@ -152,12 +241,8 @@ const OwnershipChanges: React.FC<OwnershipChangesProps> = ({
               <User className="h-5 w-5" />
               Ownership History
             </CardTitle>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleClose}
-            >
-              <X size={18}/>
+            <Button variant="ghost" size="icon" onClick={handleClose}>
+              <X size={18} />
             </Button>
           </div>
           <CardDescription>
@@ -182,16 +267,13 @@ const OwnershipChanges: React.FC<OwnershipChangesProps> = ({
             <User className="h-5 w-5" />
             Ownership History
           </CardTitle>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleClose}
-          >
-            <X size={18}/>
+          <Button variant="ghost" size="icon" onClick={handleClose}>
+            <X size={18} />
           </Button>
         </div>
         <CardDescription>
-          {ownershipChanges.length} ownership change{ownershipChanges.length !== 1 ? 's' : ''} for {ensName}
+          {ownershipChanges.length} ownership change
+          {ownershipChanges.length !== 1 ? 's' : ''} for {ensName}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -200,36 +282,15 @@ const OwnershipChanges: React.FC<OwnershipChangesProps> = ({
             {ownershipChanges.map((change, index) => (
               <div key={`${change.transactionID}-${change.blockNumber}`}>
                 <div className="flex flex-col space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Badge
-                      variant={getEventBadgeVariant(change.eventType)}
-                      className="w-fit"
-                    >
-                      {change.eventType}
-                    </Badge>
-                    {change.timestamp && (
-                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                        <Clock className="h-3 w-3" />
-                        {formatDate(change.timestamp)}
-                      </div>
-                    )}
-                  </div>
+                  {change.timestamp && (
+                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                      <Clock className="h-3 w-3" />
+                      {formatDate(change.timestamp)}
+                    </div>
+                  )}
 
                   <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1 text-sm">
-                      <User className="h-3 w-3" />
-                      <span className="font-mono text-xs">
-                        {formatAddress(change.ownerAddress)}
-                      </span>
-                    </div>
-                    {index < ownershipChanges.length - 1 && (
-                      <>
-                        <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground">
-                          Next transfer
-                        </span>
-                      </>
-                    )}
+                    {renderAddressDisplay(change.ownerAddress)}
                   </div>
 
                   <div className="grid grid-cols-1 gap-1 text-xs text-muted-foreground">
@@ -240,9 +301,16 @@ const OwnershipChanges: React.FC<OwnershipChangesProps> = ({
                       </span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <span className="font-mono">
-                        Tx: {formatAddress(change.transactionID)}
-                      </span>
+                      <span className="font-mono">Tx:</span>
+                      <a
+                        href={getEtherscanTxUrl(change.transactionID)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-mono text-blue-600 hover:text-blue-800 underline decoration-dotted flex items-center gap-1"
+                      >
+                        {formatAddress(change.transactionID)}
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
                     </div>
                   </div>
                 </div>
