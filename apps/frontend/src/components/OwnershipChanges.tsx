@@ -9,13 +9,10 @@ import {
   AlertTitle,
 } from '@ensvolution/ui/components/alert';
 import { ScrollArea } from '@ensvolution/ui/components/scroll-area';
-import { Separator } from '@ensvolution/ui/components/separator';
 import { Button } from '@ensvolution/ui/components/button';
 import {
   AlertTriangle,
   User,
-  Clock,
-  Hash,
   X,
   ExternalLink,
 } from 'lucide-react';
@@ -152,7 +149,6 @@ const OwnershipChanges: React.FC<OwnershipChangesProps> = ({
         rel="noopener noreferrer"
         className="flex items-center gap-1 text-sm hover:text-blue-600 transition-colors"
       >
-        <User className="h-3 w-3" />
         <span className="font-mono text-xs underline decoration-dotted">
           {displayText}
         </span>
@@ -163,7 +159,7 @@ const OwnershipChanges: React.FC<OwnershipChangesProps> = ({
 
   if (isLoading) {
     return (
-      <Sidebar variant="sidebar" side="right" style={{ '--sidebar-width': '32rem' } as React.CSSProperties}>
+      <Sidebar variant="sidebar" side="right">
         <SidebarHeader>
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-bold flex items-center gap-2">
@@ -195,7 +191,7 @@ const OwnershipChanges: React.FC<OwnershipChangesProps> = ({
 
   if (isError || !ownershipChanges) {
     return (
-      <Sidebar variant="sidebar" side="right" style={{ '--sidebar-width': '32rem' } as React.CSSProperties}>
+      <Sidebar variant="sidebar" side="right">
         <SidebarHeader>
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-bold flex items-center gap-2">
@@ -223,7 +219,7 @@ const OwnershipChanges: React.FC<OwnershipChangesProps> = ({
 
   if (ownershipChanges.length === 0) {
     return (
-      <Sidebar variant="sidebar" side="right" style={{ '--sidebar-width': '32rem' } as React.CSSProperties}>
+      <Sidebar variant="sidebar" side="right">
         <SidebarHeader>
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-bold flex items-center gap-2">
@@ -249,7 +245,7 @@ const OwnershipChanges: React.FC<OwnershipChangesProps> = ({
   }
 
   return (
-    <Sidebar variant="sidebar" side="right" style={{ '--sidebar-width': '32rem' } as React.CSSProperties}>
+    <Sidebar variant="sidebar" side="right">
       <SidebarHeader>
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-bold flex items-center gap-2">
@@ -269,44 +265,32 @@ const OwnershipChanges: React.FC<OwnershipChangesProps> = ({
         <ScrollArea className="h-full">
           <div className="space-y-4 pr-4">
             {ownershipChanges.map((change, index) => (
-              <div key={`${change.transactionID}-${change.blockNumber}`}>
-                <div className="p-3 text-xs rounded-md border space-y-2">
-                  {change.timestamp && (
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                      <Clock className="h-3 w-3" />
-                      {formatDate(change.timestamp)}
-                    </div>
-                  )}
-
-                  <div className="flex items-center gap-2">
-                    {renderAddressDisplay(change.ownerAddress)}
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-1 text-xs text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Hash className="h-3 w-3" />
-                      <span className="font-mono">
-                        Block: {change.blockNumber.toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <span className="font-mono">Tx:</span>
-                      <a
-                        href={getEtherscanTxUrl(change.transactionID)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="font-mono text-blue-600 hover:text-blue-800 underline decoration-dotted flex items-center gap-1"
-                      >
-                        {formatAddress(change.transactionID)}
-                        <ExternalLink className="h-3 w-3" />
-                      </a>
-                    </div>
-                  </div>
-                </div>
-
-                {index < ownershipChanges.length - 1 && (
-                  <Separator className="mt-4" />
+              <div key={`${change.transactionID}-${change.blockNumber}`} className="p-3 text-xs rounded-md border space-y-1">
+                {change.timestamp && (
+                  <>
+                    <div className="text-sm text-muted-foreground">Date</div>
+                    <div className="font-medium">{formatDate(change.timestamp)}</div>
+                  </>
                 )}
+
+                <div className="text-sm text-muted-foreground">Owner</div>
+                <div className="font-medium">{renderAddressDisplay(change.ownerAddress)}</div>
+
+                <div className="text-sm text-muted-foreground">Block Number</div>
+                <div className="font-medium font-mono text-xs">{change.blockNumber.toLocaleString()}</div>
+
+                <div className="text-sm text-muted-foreground">Transaction Hash</div>
+                <div className="font-medium">
+                  <a
+                    href={getEtherscanTxUrl(change.transactionID)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-mono text-xs text-blue-600 hover:text-blue-800 underline decoration-dotted flex items-center gap-1 w-full"
+                  >
+                    {formatAddress(change.transactionID)}
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
               </div>
             ))}
           </div>
