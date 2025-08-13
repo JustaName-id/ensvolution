@@ -2,13 +2,6 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
 import { useOwnershipChanges } from '@ensvolution/hooks';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@ensvolution/ui/components/card';
 import { Skeleton } from '@ensvolution/ui/components/skeleton';
 import {
   Alert,
@@ -27,7 +20,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { useENS } from '@/providers/ENSProvider';
-import { useSidebar } from '@ensvolution/ui/components/sidebar';
+import { Sidebar, SidebarContent, SidebarHeader, useSidebar } from '@ensvolution/ui/components/sidebar';
 import OwnershipChangesService from '@/service/ownership-changes.service';
 import { createPublicClient, http } from 'viem';
 import { mainnet } from 'viem/chains';
@@ -35,7 +28,6 @@ import { clientEnv } from '@/config/clientEnv';
 
 export interface OwnershipChangesProps {
   ensName: string;
-  className?: string;
 }
 
 interface AddressDisplayInfo {
@@ -46,7 +38,6 @@ interface AddressDisplayInfo {
 
 const OwnershipChanges: React.FC<OwnershipChangesProps> = ({
   ensName,
-  className = '',
 }) => {
   const { setShowOwnershipChanges } = useENS();
   const { handleSidebarChange } = useSidebar();
@@ -125,8 +116,6 @@ const OwnershipChanges: React.FC<OwnershipChangesProps> = ({
       year: 'numeric',
       month: 'short',
       day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
     });
   };
 
@@ -174,22 +163,22 @@ const OwnershipChanges: React.FC<OwnershipChangesProps> = ({
 
   if (isLoading) {
     return (
-      <Card className={className}>
-        <CardHeader>
+      <Sidebar variant="sidebar" side="right" style={{ '--sidebar-width': '32rem' } as React.CSSProperties}>
+        <SidebarHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
+            <h3 className="text-lg font-bold flex items-center gap-2">
               <User className="h-5 w-5" />
               Ownership History
-            </CardTitle>
+            </h3>
             <Button variant="ghost" size="icon" onClick={handleClose}>
               <X size={18} />
             </Button>
           </div>
-          <CardDescription>
+          <p className="text-sm text-muted-foreground">
             Loading ownership changes for {ensName}...
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+          </p>
+        </SidebarHeader>
+        <SidebarContent className="px-2 py-2">
           <div className="space-y-4">
             {[...Array(3)].map((_, i) => (
               <div key={i} className="space-y-2">
@@ -199,26 +188,26 @@ const OwnershipChanges: React.FC<OwnershipChangesProps> = ({
               </div>
             ))}
           </div>
-        </CardContent>
-      </Card>
+        </SidebarContent>
+      </Sidebar>
     );
   }
 
   if (isError || !ownershipChanges) {
     return (
-      <Card className={className}>
-        <CardHeader>
+      <Sidebar variant="sidebar" side="right" style={{ '--sidebar-width': '32rem' } as React.CSSProperties}>
+        <SidebarHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
+            <h3 className="text-lg font-bold flex items-center gap-2">
               <User className="h-5 w-5" />
               Ownership History
-            </CardTitle>
+            </h3>
             <Button variant="ghost" size="icon" onClick={handleClose}>
               <X size={18} />
             </Button>
           </div>
-        </CardHeader>
-        <CardContent>
+        </SidebarHeader>
+        <SidebarContent className="px-2 py-2">
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Error Loading Ownership Data</AlertTitle>
@@ -227,61 +216,61 @@ const OwnershipChanges: React.FC<OwnershipChangesProps> = ({
                 `Failed to load ownership history for ${ensName}`}
             </AlertDescription>
           </Alert>
-        </CardContent>
-      </Card>
+        </SidebarContent>
+      </Sidebar>
     );
   }
 
   if (ownershipChanges.length === 0) {
     return (
-      <Card className={className}>
-        <CardHeader>
+      <Sidebar variant="sidebar" side="right" style={{ '--sidebar-width': '32rem' } as React.CSSProperties}>
+        <SidebarHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
+            <h3 className="text-lg font-bold flex items-center gap-2">
               <User className="h-5 w-5" />
               Ownership History
-            </CardTitle>
+            </h3>
             <Button variant="ghost" size="icon" onClick={handleClose}>
               <X size={18} />
             </Button>
           </div>
-          <CardDescription>
+          <p className="text-sm text-muted-foreground">
             No ownership changes found for {ensName}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+          </p>
+        </SidebarHeader>
+        <SidebarContent className="px-2 py-2 flex items-center justify-center">
           <div className="text-center py-6 text-muted-foreground">
             <User className="h-12 w-12 mx-auto mb-2 opacity-50" />
             <p>No ownership transfers have been recorded for this domain.</p>
           </div>
-        </CardContent>
-      </Card>
+        </SidebarContent>
+      </Sidebar>
     );
   }
 
   return (
-    <Card className={className}>
-      <CardHeader>
+    <Sidebar variant="sidebar" side="right" style={{ '--sidebar-width': '32rem' } as React.CSSProperties}>
+      <SidebarHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
+          <h3 className="text-lg font-bold flex items-center gap-2">
             <User className="h-5 w-5" />
             Ownership History
-          </CardTitle>
+          </h3>
           <Button variant="ghost" size="icon" onClick={handleClose}>
             <X size={18} />
           </Button>
         </div>
-        <CardDescription>
+        <p className="text-sm text-muted-foreground">
           {ownershipChanges.length} ownership change
           {ownershipChanges.length !== 1 ? 's' : ''} for {ensName}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <ScrollArea className="h-96">
-          <div className="space-y-4">
+        </p>
+      </SidebarHeader>
+      <SidebarContent className="px-2 py-2">
+        <ScrollArea className="h-full">
+          <div className="space-y-4 pr-4">
             {ownershipChanges.map((change, index) => (
               <div key={`${change.transactionID}-${change.blockNumber}`}>
-                <div className="flex flex-col space-y-2">
+                <div className="p-3 text-xs rounded-md border space-y-2">
                   {change.timestamp && (
                     <div className="flex items-center gap-1 text-sm text-muted-foreground">
                       <Clock className="h-3 w-3" />
@@ -322,8 +311,8 @@ const OwnershipChanges: React.FC<OwnershipChangesProps> = ({
             ))}
           </div>
         </ScrollArea>
-      </CardContent>
-    </Card>
+      </SidebarContent>
+    </Sidebar>
   );
 };
 

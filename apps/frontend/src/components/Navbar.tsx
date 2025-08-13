@@ -2,7 +2,7 @@
 
 import {useEffect, useState} from 'react';
 import {useRouter, usePathname, useSearchParams} from 'next/navigation';
-import {Search, Moon, Sun} from 'lucide-react';
+import {Search, Moon, Sun, Users} from 'lucide-react';
 import {Button} from '@ensvolution/ui/components/button';
 import {Input} from '@ensvolution/ui/components/input';
 import {useJustWeb3} from "@justweb3/widget";
@@ -27,6 +27,8 @@ import {
 import Image from "next/image";
 import {ShareButton} from "@/components/ShareButton";
 import { useMounted } from '@ensvolution/hooks/use-mounted';
+import { useENS } from '@/providers/ENSProvider';
+import { useSidebar } from '@ensvolution/ui/components/sidebar';
 
 interface NavbarProps {}
 export const Navbar: React.FC<NavbarProps>  = ()=> {
@@ -37,6 +39,8 @@ export const Navbar: React.FC<NavbarProps>  = ()=> {
   const {openEnsProfile} = useJustWeb3();
   const {setTheme, resolvedTheme} = useTheme();
   const {changeTheme, color} = useJustWeb3Theme();
+  const { showOwnershipChanges, setShowOwnershipChanges } = useENS();
+  const { handleSidebarChange } = useSidebar();
   const form = useForm<z.infer<typeof ensSchema>>({
     resolver: zodResolver(ensSchema),
     defaultValues: {
@@ -79,6 +83,19 @@ export const Navbar: React.FC<NavbarProps>  = ()=> {
         <div className="flex flex-row mb-4 sm:mb-0 sm:flex-col w-full place-content-between">
           <Image src={'/static/ensvolution.png'} alt={"logo"} width={100} height={30} />
           <div className="block sm:hidden space-x-3">
+            {ensName && (
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => {
+                  setShowOwnershipChanges(true);
+                  handleSidebarChange(true);
+                }}
+                className="h-[38px] w-[38px]"
+              >
+                <Users className="h-[1.2rem] w-[1.2rem]" />
+              </Button>
+            )}
             <ShareButton ensName={ensName} />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -105,6 +122,20 @@ export const Navbar: React.FC<NavbarProps>  = ()=> {
             >
               View Profile
             </Button>
+
+            {ensName && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowOwnershipChanges(true);
+                  handleSidebarChange(true);
+                }}
+                className="hidden sm:flex"
+              >
+                <Users className="h-4 w-4 mr-2" />
+                Ownership History
+              </Button>
+            )}
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="flex gap-3 w-full sm:w-auto">
               <FormField

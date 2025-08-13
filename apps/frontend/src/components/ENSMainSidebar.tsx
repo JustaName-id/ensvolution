@@ -1,7 +1,7 @@
 "use client"
 
 import React from 'react';
-import { Sidebar } from "@ensvolution/ui/components/sidebar";
+import { useSidebar } from "@ensvolution/ui/components/sidebar";
 import { useENS } from "@/providers/ENSProvider";
 import ENSSidebar from "./ENSSidebar";
 import OwnershipChanges from "./OwnershipChanges";
@@ -11,16 +11,18 @@ interface ENSMainSidebarProps {}
 
 const ENSMainSidebar: React.FC<ENSMainSidebarProps> = () => {
     const { selectedProfile, showOwnershipChanges } = useENS();
+    const { isSidebarOpen } = useSidebar();
     const searchParams = useSearchParams();
     const ensName = searchParams.get('name') || '';
 
+    // Only render sidebar if it should be open
+    if (!isSidebarOpen) {
+        return null;
+    }
+
     // Show ownership changes view
     if (showOwnershipChanges) {
-        return (
-            <Sidebar variant="sidebar" side="right">
-                <OwnershipChanges ensName={ensName} className="h-full border-0" />
-            </Sidebar>
-        );
+        return <OwnershipChanges ensName={ensName} />;
     }
 
     // Show profile details if a profile is selected
@@ -28,7 +30,7 @@ const ENSMainSidebar: React.FC<ENSMainSidebarProps> = () => {
         return <ENSSidebar />;
     }
 
-    // Don't render anything if no profile selected and not showing ownership
+    // Don't render anything if no content to show
     return null;
 };
 

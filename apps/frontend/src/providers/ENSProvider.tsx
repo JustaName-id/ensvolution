@@ -28,6 +28,18 @@ export const ENSProvider: React.FC<ENSProviderProps> = ({
 
     const changeSelectedProfile = (_selectedProfile: ProfileStateWithChanges | null) => {
         setSelectedProfile(_selectedProfile);
+        // Clear ownership changes when selecting a profile
+        if (_selectedProfile) {
+            setShowOwnershipChanges(false);
+        }
+    }
+
+    const handleShowOwnershipChanges = (show: boolean) => {
+        setShowOwnershipChanges(show);
+        // Clear selected profile when showing ownership changes
+        if (show) {
+            setSelectedProfile(null);
+        }
     }
 
     return (
@@ -35,7 +47,7 @@ export const ENSProvider: React.FC<ENSProviderProps> = ({
             selectedProfile,
             changeSelectedProfile,
             showOwnershipChanges,
-            setShowOwnershipChanges
+            setShowOwnershipChanges: handleShowOwnershipChanges
         }}>
             {children}
         </ENSContext>
