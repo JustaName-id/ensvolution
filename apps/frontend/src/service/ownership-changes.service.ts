@@ -13,8 +13,9 @@ const nameWrapperAbi = parseAbi([
   'function ownerOf(uint256 id) view returns (address owner)',
 ]);
 
-// The NameWrapper contract address
 const NAME_WRAPPER_ADDRESS = '0xd4416b13d2b3a9abae7acd5d6c2bbdbe25686401';
+
+const OLD_REGISTRAR_CONTROLLER_ADDRESS = "0x283Af0B28c62C092C9727F1Ee09c02CA627EB7F5";
 
 export interface OwnershipEvent {
   id: string;
@@ -64,16 +65,16 @@ export class OwnershipChangesService {
 
       const domain = response.data.domains[0];
       const relevantEvents = await this.filterRelevantEvents(domain.events, domain.id);
-      
+
       // Sort by block number to get chronological order
       relevantEvents.sort((a, b) => a.blockNumber - b.blockNumber);
 
       // Convert to OwnershipChange objects and add timestamps
       const ownershipChanges: OwnershipChange[] = [];
-      
+
       for (const event of relevantEvents) {
         const timestamp = await this.getBlockTimestamp(event.blockNumber);
-        
+
         ownershipChanges.push({
           blockNumber: event.blockNumber,
           transactionID: event.transactionID,
@@ -135,7 +136,7 @@ export class OwnershipChangesService {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         query,
         variables: { name: ensName }
       }),
@@ -162,8 +163,9 @@ export class OwnershipChangesService {
       }
 
       // Skip NewOwner events where owner is the NameWrapper contract
-      if (event.__typename === 'NewOwner' && 
-          event.owner.id.toLowerCase() === NAME_WRAPPER_ADDRESS.toLowerCase()) {
+      if (event.__typename === 'NewOwner' &&
+        (event.owner.id.toLowerCase() === NAME_WRAPPER_ADDRESS.toLowerCase() ||
+          event.owner.id.toLowerCase() === OLD_REGISTRAR_CONTROLLER_ADDRESS.toLowerCase())) {
         continue;
       }
 
@@ -171,7 +173,7 @@ export class OwnershipChangesService {
       if (event.__typename === 'WrappedTransfer') {
         try {
           const actualOwner = await this.getOwnerFromContract(domainId, event.blockNumber);
-          
+
           // Create a modified event with the actual owner
           const modifiedEvent: OwnershipEvent = {
             ...event,
@@ -179,7 +181,7 @@ export class OwnershipChangesService {
               id: actualOwner
             }
           };
-          
+
           relevantEvents.push(modifiedEvent);
         } catch (error) {
           console.error(`Error getting owner from contract for WrappedTransfer event:`, error);
