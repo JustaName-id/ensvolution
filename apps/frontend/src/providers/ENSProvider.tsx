@@ -14,8 +14,6 @@ export interface LifecycleSelection {
 interface ENSContextProps {
     selectedProfile: ProfileStateWithChanges | null;
     changeSelectedProfile: (profile: ProfileStateWithChanges | null) => void;
-    showOwnershipChanges: boolean;
-    setShowOwnershipChanges: (show: boolean) => void;
     selectedOwnershipChange: OwnershipChangeSelection | null;
     changeSelectedOwnershipChange: (change: OwnershipChangeSelection | null) => void;
     selectedLifecycle: LifecycleSelection | null;
@@ -25,8 +23,6 @@ interface ENSContextProps {
 const ENSContext = createContext<ENSContextProps>({
     selectedProfile: null,
     changeSelectedProfile: () => undefined,
-    showOwnershipChanges: false,
-    setShowOwnershipChanges: () => undefined,
     selectedOwnershipChange: null,
     changeSelectedOwnershipChange: () => undefined,
     selectedLifecycle: null,
@@ -42,13 +38,11 @@ export const ENSProvider: React.FC<ENSProviderProps> = ({
                                                         }) => {
 
     const [selectedProfile, setSelectedProfile] = useState<ProfileStateWithChanges | null>(null);
-    const [showOwnershipChanges, setShowOwnershipChanges] = useState<boolean>(false);
     const [selectedOwnershipChange, setSelectedOwnershipChange] = useState<OwnershipChangeSelection | null>(null);
     const [selectedLifecycle, setSelectedLifecycle] = useState<LifecycleSelection | null>(null);
 
-    const clearOthers = (keep: 'profile' | 'ownership-list' | 'ownership-change' | 'lifecycle') => {
+    const clearOthers = (keep: 'profile' | 'ownership-change' | 'lifecycle') => {
         if (keep !== 'profile') setSelectedProfile(null);
-        if (keep !== 'ownership-list') setShowOwnershipChanges(false);
         if (keep !== 'ownership-change') setSelectedOwnershipChange(null);
         if (keep !== 'lifecycle') setSelectedLifecycle(null);
     }
@@ -56,11 +50,6 @@ export const ENSProvider: React.FC<ENSProviderProps> = ({
     const changeSelectedProfile = (_selectedProfile: ProfileStateWithChanges | null) => {
         setSelectedProfile(_selectedProfile);
         if (_selectedProfile) clearOthers('profile');
-    }
-
-    const handleShowOwnershipChanges = (show: boolean) => {
-        setShowOwnershipChanges(show);
-        if (show) clearOthers('ownership-list');
     }
 
     const changeSelectedOwnershipChange = (change: OwnershipChangeSelection | null) => {
@@ -77,8 +66,6 @@ export const ENSProvider: React.FC<ENSProviderProps> = ({
         <ENSContext value={{
             selectedProfile,
             changeSelectedProfile,
-            showOwnershipChanges,
-            setShowOwnershipChanges: handleShowOwnershipChanges,
             selectedOwnershipChange,
             changeSelectedOwnershipChange,
             selectedLifecycle,
