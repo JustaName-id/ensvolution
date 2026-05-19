@@ -60,27 +60,29 @@ export const ENSProfileCard: React.FC<ENSProfileCardProps> = ({
             }}
             onClick={handleClick}
         >
-            <div className="px-3 py-2 space-x-1 bg-gray-50 border-b flex flex-row items-center">
-                <div className={"w-6 h-6 rounded-full my-auto bg-gray-500 flex items-center justify-center"}>
+            <div className="px-3 py-2 gap-2 bg-gray-50 border-b flex flex-row items-center">
+                <div className={"w-6 h-6 rounded-full my-auto bg-gray-500 flex items-center justify-center shrink-0"}>
                       <EnsAvatar avatarLink={avatar} />
                 </div>
                 <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium text-gray-700 truncate">{data.name}</div>
-                    <div className="flex justify-between items-center">
-                        <div className="text-xs text-gray-500">{formatDate(data.timestamp)} • {parsedEventType} {parsedChanges}</div>
-                    </div>
+                    <div className="text-xs text-gray-500 truncate">{formatDate(data.timestamp)} • {parsedEventType} {parsedChanges}</div>
                 </div>
-                {data.owner && (
-                    <div
-                        className="ml-1 inline-flex items-center gap-1 rounded-full bg-amber-100 border border-amber-200 px-1.5 py-0.5 text-[10px] text-amber-800 max-w-[88px]"
-                        title={`Owner at this block: ${data.owner.address}${data.owner.isWrapped ? ' (wrapped)' : ''}`}
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        {data.owner.isWrapped ? <Lock className="h-2.5 w-2.5" /> : <User className="h-2.5 w-2.5" />}
-                        <span className="font-mono truncate">{formatAddress(data.owner.address)}</span>
-                    </div>
-                )}
             </div>
+
+            {data.owner && (
+                <div
+                    className="flex items-center gap-1.5 px-3 py-1 bg-amber-50 border-b border-amber-100 text-[11px]"
+                    title={`Owner at this block: ${data.owner.address}${data.owner.isWrapped ? ' (wrapped)' : ''}`}
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    {data.owner.isWrapped
+                        ? <Lock className="h-3 w-3 text-amber-700 shrink-0" />
+                        : <User className="h-3 w-3 text-amber-700 shrink-0" />}
+                    <span className="text-[10px] font-medium uppercase tracking-wide text-amber-700">Owner</span>
+                    <span className="font-mono text-gray-700 ml-auto">{formatAddress(data.owner.address)}</span>
+                </div>
+            )}
 
             {data.changes.added?.map((record, index) => (
                 <RecordDisplay

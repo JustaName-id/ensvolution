@@ -13,7 +13,7 @@ import {
 
 const X_STEP = 300;
 const X_FIRST_OFFSET = 300;
-const LANE_GAP = 140;
+const LANE_GAP = 170;
 const PROFILE_CARD_WIDTH = 256;
 const LANE_NODE_WIDTH = 200;
 const LANE_MIN_SPACING = LANE_NODE_WIDTH + 12;
@@ -50,6 +50,9 @@ function interpolateX(
         if (p.block <= eventBlock) prev = p;
         if (p.block > eventBlock && !next) next = p;
     }
+
+    if (prev && prev.block === eventBlock) return prev.x;
+    if (next && next.block === eventBlock) return next.x;
 
     if (prev && next) {
         const span = next.block - prev.block;
@@ -175,7 +178,7 @@ export const useENSFlow = (
                 eventType: profileState.eventType,
                 owner,
             },
-            height: 105 + (nbOfChanges <= 1 ? 0 : nbOfChanges - 1) * 48,
+            height: 105 + (nbOfChanges <= 1 ? 0 : nbOfChanges - 1) * 48 + (owner ? 28 : 0),
 
             width: PROFILE_CARD_WIDTH
         })
@@ -186,8 +189,6 @@ export const useENSFlow = (
         .map(n => ({ block: Number(n.data.blockNumber), x: n.position.x }))
         .sort((a, b) => a.block - b.block);
 
-    const profileBlockSet = new Set(profilePositions.map(p => p.block));
-
     // Lane y positions — above the topmost resolver row.
     const minResolverY = resolverYPosition.size > 0
         ? Math.min(...Array.from(resolverYPosition.values()))
@@ -195,17 +196,16 @@ export const useENSFlow = (
     const OWNERSHIP_LANE_Y = minResolverY - LANE_GAP - 25;
     const LIFECYCLE_LANE_Y = OWNERSHIP_LANE_Y - 90;
 
-    // Standalone ownership-change nodes (those whose block does NOT coincide
-    // with any profile state — those are absorbed into the profile's badge).
-    const standalone = sortedOwnership.filter(ch => !profileBlockSet.has(ch.blockNumber));
-    const standaloneBefore = standalone.filter(ch =>
+    // Every ownership change becomes a standalone node on the ownership lane,
+    // even when it shares a block with a profile event. The profile's owner
+    const standaloneBefore = sortedOwnership.filter(ch =>
         profilePositions.length === 0 || ch.blockNumber < profilePositions[0].block
     );
-    const standaloneAfter = standalone.filter(ch =>
+    const standaloneAfter = sortedOwnership.filter(ch =>
         profilePositions.length > 0 && ch.blockNumber > profilePositions[profilePositions.length - 1].block
     );
 
-    standalone.forEach((ch) => {
+    sortedOwnership.forEach((ch) => {
         const isBefore = profilePositions.length > 0 && ch.blockNumber < profilePositions[0].block;
         const isAfter = profilePositions.length > 0 && ch.blockNumber > profilePositions[profilePositions.length - 1].block;
         const rankBefore = isBefore ? standaloneBefore.indexOf(ch) : 0;
