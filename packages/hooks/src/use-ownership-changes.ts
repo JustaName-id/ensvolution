@@ -1,30 +1,25 @@
+"use client"
+
 import { useQuery } from '@tanstack/react-query';
+import { OwnershipChange } from '@ensvolution/types';
 
-// Define the interfaces here to avoid circular dependencies
-export interface OwnershipChange {
-  blockNumber: number;
-  transactionID: string;
-  ownerAddress: string;
-  eventType: 'Transfer' | 'NewOwner' | 'WrappedTransfer';
-  timestamp?: string;
-}
+export type { OwnershipChange };
 
-export const useOwnershipChanges = (ensName?: string, serviceInstance?: any) => {
+export const useOwnershipChanges = (ensName?: string) => {
   return useQuery<OwnershipChange[], Error>({
     queryKey: ['ownership-changes', ensName],
     queryFn: async () => {
-      if (!ensName) {
-        throw new Error('ENS name is required');
+      if (!ensName) throw new Error('ENS name is required');
+      const res = await fetch(
+        `/api/ens-profile/ownership?ensName=${encodeURIComponent(ensName)}`
+      );
+      if (!res.ok) {
+        throw new Error(`Ownership fetch failed: ${res.status}`);
       }
-
-      if (!serviceInstance) {
-        throw new Error('Service instance is required');
-      }
-
-      return serviceInstance.getOwnershipChanges(ensName);
+      return res.json();
     },
-    enabled: !!ensName && !!serviceInstance,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    enabled: !!ensName,
+    staleTime: 1000 * 60 * 5,
     retry: 2,
   });
 };

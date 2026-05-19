@@ -12,6 +12,7 @@
     "./use-ens-avatar": "./src/use-ens-avatar.ts",
     "./use-custom-fit-view": "./src/use-custom-fit-view.ts",
     "./use-fit-nodes": "./src/use-fit-nodes.ts",
-    "./use-ownership-changes": "./src/use-ownership-changes.ts"
+    "./use-ownership-changes": "./src/use-ownership-changes.ts",
+    "./use-ens-registration": "./src/use-ens-registration.ts"
   }
 }

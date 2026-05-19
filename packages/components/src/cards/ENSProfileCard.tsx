@@ -1,10 +1,14 @@
-import { Diff, PlusCircle, Trash2 } from "lucide-react";
+import { Diff, Lock, PlusCircle, Trash2, User } from "lucide-react";
 import React, {memo, useMemo} from "react";
 import {formatDate, getColorByProfile} from '@ensvolution/helpers'
 import {ProfileStateWithChanges} from "@ensvolution/types";
 // import {EnsAvatar} from "@ensvolution/components/ENSAvatar";
 import {RecordDisplay} from "@ensvolution/components/RecordDisplay";
 import { EnsAvatar } from "@ensvolution/components/ENSAvatar";
+
+function formatAddress(address: string) {
+    return `${address.slice(0, 6)}…${address.slice(-4)}`;
+}
 
 interface ENSProfileCardProps extends ProfileStateWithChanges {
     handleClick?: () => void;
@@ -56,16 +60,26 @@ export const ENSProfileCard: React.FC<ENSProfileCardProps> = ({
             }}
             onClick={handleClick}
         >
-            <div className="px-3 py-2 space-x-1 bg-gray-50 border-b flex flex-row">
+            <div className="px-3 py-2 space-x-1 bg-gray-50 border-b flex flex-row items-center">
                 <div className={"w-6 h-6 rounded-full my-auto bg-gray-500 flex items-center justify-center"}>
                       <EnsAvatar avatarLink={avatar} />
                 </div>
-                <div>
-                    <div className="text-sm font-medium text-gray-700">{data.name}</div>
+                <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-gray-700 truncate">{data.name}</div>
                     <div className="flex justify-between items-center">
                         <div className="text-xs text-gray-500">{formatDate(data.timestamp)} • {parsedEventType} {parsedChanges}</div>
                     </div>
                 </div>
+                {data.owner && (
+                    <div
+                        className="ml-1 inline-flex items-center gap-1 rounded-full bg-amber-100 border border-amber-200 px-1.5 py-0.5 text-[10px] text-amber-800 max-w-[88px]"
+                        title={`Owner at this block: ${data.owner.address}${data.owner.isWrapped ? ' (wrapped)' : ''}`}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {data.owner.isWrapped ? <Lock className="h-2.5 w-2.5" /> : <User className="h-2.5 w-2.5" />}
+                        <span className="font-mono truncate">{formatAddress(data.owner.address)}</span>
+                    </div>
+                )}
             </div>
 
             {data.changes.added?.map((record, index) => (

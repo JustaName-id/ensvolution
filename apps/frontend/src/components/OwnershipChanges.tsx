@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useOwnershipChanges } from '@ensvolution/hooks';
 import { Skeleton } from '@ensvolution/ui/components/skeleton';
 import {
@@ -18,10 +18,7 @@ import {
 } from 'lucide-react';
 import { useENS } from '@/providers/ENSProvider';
 import { Sidebar, SidebarContent, SidebarHeader, useSidebar } from '@ensvolution/ui/components/sidebar';
-import OwnershipChangesService from '@/service/ownership-changes.service';
-import { createPublicClient, http } from 'viem';
-import { mainnet } from 'viem/chains';
-import { clientEnv } from '@/config/clientEnv';
+import { viemClient } from '@/config/viemClient';
 
 export interface OwnershipChangesProps {
   ensName: string;
@@ -42,29 +39,23 @@ const OwnershipChanges: React.FC<OwnershipChangesProps> = ({
     Record<string, AddressDisplayInfo>
   >({});
 
-  // Create a simple viem client for ENS lookups
-  const client = useMemo(
-    () =>
-      createPublicClient({
-        chain: mainnet,
-        transport: http(clientEnv.mainnetProvider),
-      }),
-    []
-  );
-
-  // Create service instance
-  const serviceInstance = useMemo(() => new OwnershipChangesService(), []);
-
   const {
     data: ownershipChanges,
     isLoading,
     error,
     isError,
-  } = useOwnershipChanges(ensName, serviceInstance);
+  } = useOwnershipChanges(ensName);
 
-  // Resolve ENS names for addresses using viem's built-in getEnsName
+  // Tracks which addresses we've already started resolving so that re-renders
+  // (e.g. the query refetching) don't kick off duplicate lookups. A ref is
+  // used because we need a synchronous read inside the loop — `setState`
+  // updaters run later during React's reconciliation, so we can't rely on a
+  // setState-callback read to gate the next iteration.
+  const inFlightRef = useRef<Set<string>>(new Set());
+
   useEffect(() => {
     if (!ownershipChanges || ownershipChanges.length === 0) return;
+    let cancelled = false;
 
     const resolveAddresses = async () => {
       const uniqueAddresses = [
@@ -72,26 +63,26 @@ const OwnershipChanges: React.FC<OwnershipChangesProps> = ({
       ];
 
       for (const address of uniqueAddresses) {
-        if (addressInfo[address]) continue; // Skip if already resolved or resolving
+        if (cancelled) return;
+        if (inFlightRef.current.has(address)) continue;
+        inFlightRef.current.add(address);
 
-        // Set loading state
         setAddressInfo((prev) => ({
           ...prev,
           [address]: { address, name: null, isLoading: true },
         }));
 
         try {
-          // Use viem's built-in getEnsName function
-          const ensName = await client.getEnsName({
+          const resolved = await viemClient.getEnsName({
             address: address as `0x${string}`,
           });
-
+          if (cancelled) return;
           setAddressInfo((prev) => ({
             ...prev,
-            [address]: { address, name: ensName, isLoading: false },
+            [address]: { address, name: resolved, isLoading: false },
           }));
         } catch {
-          // Fallback to address if ENS resolution fails
+          if (cancelled) return;
           setAddressInfo((prev) => ({
             ...prev,
             [address]: { address, name: null, isLoading: false },
@@ -101,7 +92,10 @@ const OwnershipChanges: React.FC<OwnershipChangesProps> = ({
     };
 
     void resolveAddresses();
-  }, [ownershipChanges, client, addressInfo]);
+    return () => {
+      cancelled = true;
+    };
+  }, [ownershipChanges]);
 
   const handleClose = () => {
     setShowOwnershipChanges(false);

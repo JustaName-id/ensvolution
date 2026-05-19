@@ -1,7 +1,8 @@
-import { createPublicClient, http, Address, parseAbi } from 'viem';
+import { createPublicClient, http, parseAbi } from 'viem';
 import { mainnet } from 'viem/chains';
 import { normalize } from 'viem/ens';
 import { serverEnv } from '@/config/serverEnv';
+import type { OwnershipChange } from '@ensvolution/types';
 
 const client = createPublicClient({
   chain: mainnet,
@@ -36,13 +37,7 @@ export interface DomainWithEvents {
   events: OwnershipEvent[];
 }
 
-export interface OwnershipChange {
-  blockNumber: number;
-  transactionID: string;
-  ownerAddress: string;
-  eventType: 'Transfer' | 'NewOwner' | 'WrappedTransfer';
-  timestamp?: string;
-}
+export type { OwnershipChange };
 
 export interface OwnershipChangesResponse {
   data: {
@@ -69,22 +64,22 @@ export class OwnershipChangesService {
       // Sort by block number to get chronological order
       relevantEvents.sort((a, b) => a.blockNumber - b.blockNumber);
 
-      // Convert to OwnershipChange objects and add timestamps
-      const ownershipChanges: OwnershipChange[] = [];
+      // Resolve all unique block timestamps in parallel — N sequential
+      // eth_getBlockByNumber calls were hitting the Vercel 30s limit on
+      // heavily-traded names.
+      const uniqueBlocks = Array.from(new Set(relevantEvents.map((e) => e.blockNumber)));
+      const timestampEntries = await Promise.all(
+        uniqueBlocks.map(async (bn) => [bn, await this.getBlockTimestamp(bn)] as const)
+      );
+      const timestampByBlock = new Map<number, string>(timestampEntries);
 
-      for (const event of relevantEvents) {
-        const timestamp = await this.getBlockTimestamp(event.blockNumber);
-
-        ownershipChanges.push({
-          blockNumber: event.blockNumber,
-          transactionID: event.transactionID,
-          ownerAddress: event.owner.id,
-          eventType: event.__typename,
-          timestamp,
-        });
-      }
-
-      return ownershipChanges;
+      return relevantEvents.map((event) => ({
+        blockNumber: event.blockNumber,
+        transactionID: event.transactionID,
+        ownerAddress: event.owner.id,
+        eventType: event.__typename,
+        timestamp: timestampByBlock.get(event.blockNumber),
+      }));
     } catch (error) {
       console.error('Error fetching ownership changes:', error);
       return [];
@@ -111,11 +106,6 @@ export class OwnershipChangesService {
             blockNumber
             transactionID
             __typename
-            ... on Transfer {
-              owner {
-                id
-              }
-            }
             ... on NewOwner {
               owner {
                 id

@@ -5,32 +5,41 @@ import { useSidebar } from "@ensvolution/ui/components/sidebar";
 import { useENS } from "@/providers/ENSProvider";
 import ENSSidebar from "./ENSSidebar";
 import OwnershipChanges from "./OwnershipChanges";
+import OwnershipChangeSidebar from "./OwnershipChangeSidebar";
+import LifecycleSidebar from "./LifecycleSidebar";
 import { useSearchParams } from 'next/navigation';
 
-interface ENSMainSidebarProps {}
-
-const ENSMainSidebar: React.FC<ENSMainSidebarProps> = () => {
-    const { selectedProfile, showOwnershipChanges } = useENS();
+const ENSMainSidebar: React.FC = () => {
+    const {
+        selectedProfile,
+        showOwnershipChanges,
+        selectedOwnershipChange,
+        selectedLifecycle,
+    } = useENS();
     const { isSidebarOpen } = useSidebar();
     const searchParams = useSearchParams();
     const ensName = searchParams.get('name') || '';
 
-    // Only render sidebar if it should be open
     if (!isSidebarOpen) {
         return null;
     }
 
-    // Show ownership changes view
     if (showOwnershipChanges) {
         return <OwnershipChanges ensName={ensName} />;
     }
 
-    // Show profile details if a profile is selected
+    if (selectedOwnershipChange) {
+        return <OwnershipChangeSidebar />;
+    }
+
+    if (selectedLifecycle) {
+        return <LifecycleSidebar />;
+    }
+
     if (selectedProfile) {
         return <ENSSidebar />;
     }
 
-    // Don't render anything if no content to show
     return null;
 };
 
