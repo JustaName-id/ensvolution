@@ -15,8 +15,13 @@ import { useContractName } from '@ensvolution/hooks/use-contract-name';
 interface ENSSidebarProps {}
 
 const ENSSidebar: React.FC<ENSSidebarProps> = () => {
-    const {selectedProfile} = useENS();
+    const {selectedProfile, changeSelectedProfile} = useENS();
     const {handleSidebarChange} = useSidebar();
+
+    const handleClose = () => {
+        changeSelectedProfile(null);
+        handleSidebarChange(false);
+    };
     const { data: contractName } = useContractName(
         selectedProfile?.resolverAddress)
 
@@ -116,7 +121,7 @@ const ENSSidebar: React.FC<ENSSidebarProps> = () => {
                     <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleSidebarChange(false)}
+                        onClick={handleClose}
                     >
                         <X size={18}/>
                     </Button>

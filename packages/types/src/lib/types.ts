@@ -19,6 +19,13 @@ export type ProfileRecord = {
   rawValue: string;
 }
 
+export type OwnerInfo = {
+  address: string;
+  isWrapped: boolean;
+  blockNumber: number;
+  transactionID: string;
+}
+
 export type ProfileState ={
   id: number;
   timestamp: string;
@@ -44,6 +51,7 @@ export type ProfileStateWithChanges ={
   resolverChange?: ResolverChange;
   resolverAddress?: string;
   eventType?: "text" | "addr" | "resolver" | "multi" | "contentHash";
+  owner?: OwnerInfo;
   changes: {
     added: ProfileRecord[],
     deleted: ProfileRecord[],
@@ -59,3 +67,43 @@ export type ResolverNode = Node<ResolverChange>
 export type LineNode = Node<Line>
 
 export type ChangesEdge = Edge<Changes>
+
+export type OwnershipChangeNodeData = {
+  ownerAddress: string;
+  blockNumber: number;
+  transactionID: string;
+  isWrapped: boolean;
+  timestamp?: string;
+}
+
+export type OwnershipChangeNode = Node<OwnershipChangeNodeData>
+
+export type LifecycleEventKind = "registration" | "renewal" | "expiry";
+
+export type LifecycleEvent = {
+  kind: LifecycleEventKind;
+  blockNumber?: number;
+  transactionID?: string;
+  timestamp: string;
+  expiryDate?: string;
+}
+
+export type LifecycleNodeData = LifecycleEvent;
+
+export type LifecycleNode = Node<LifecycleNodeData>
+
+export type OwnershipEventType = 'Transfer' | 'NewOwner' | 'WrappedTransfer';
+
+export type OwnershipChange = {
+  blockNumber: number;
+  transactionID: string;
+  ownerAddress: string;
+  eventType: OwnershipEventType;
+  timestamp?: string;
+}
+
+export type ENSRegistrationData = {
+  registrationDate: string;
+  currentExpiryDate: string;
+  events: LifecycleEvent[];
+}

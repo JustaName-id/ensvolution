@@ -1,9 +1,18 @@
 {
   "name": "@ensvolution/hooks",
   "version": "0.0.1",
-  "main": "./index.js",
-  "types": "./index.d.ts",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
   "exports": {
-    "./*": "./src/*.ts"
+    ".": "./src/index.ts",
+    "./use-ens-profile": "./src/use-ens-profile.ts",
+    "./use-ens-flow": "./src/use-ens-flow.ts",
+    "./use-contract-name": "./src/use-contract-name.ts",
+    "./use-mounted": "./src/use-mounted.ts",
+    "./use-ens-avatar": "./src/use-ens-avatar.ts",
+    "./use-custom-fit-view": "./src/use-custom-fit-view.ts",
+    "./use-fit-nodes": "./src/use-fit-nodes.ts",
+    "./use-ownership-changes": "./src/use-ownership-changes.ts",
+    "./use-ens-registration": "./src/use-ens-registration.ts"
   }
 }

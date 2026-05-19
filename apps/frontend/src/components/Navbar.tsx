@@ -27,7 +27,6 @@ import {
 import Image from "next/image";
 import {ShareButton} from "@/components/ShareButton";
 import { useMounted } from '@ensvolution/hooks/use-mounted';
-
 interface NavbarProps {}
 export const Navbar: React.FC<NavbarProps>  = ()=> {
   const router = useRouter();
@@ -105,6 +104,7 @@ export const Navbar: React.FC<NavbarProps>  = ()=> {
             >
               View Profile
             </Button>
+
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="flex gap-3 w-full sm:w-auto">
               <FormField

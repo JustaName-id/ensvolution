@@ -11,9 +11,10 @@ import { getColor } from '@ensvolution/helpers';
 
 export interface ENSControlBarProps {
     nodes: (ResolverNode | LineNode | ProfileNode)[]
+    ensName?: string;
 }
 
-export const ENSControlBar: React.FC<ENSControlBarProps> = ({nodes}) => {
+export const ENSControlBar: React.FC<ENSControlBarProps> = ({nodes, ensName}) => {
     const {zoomOut, zoomIn, fitView} = useReactFlow()
     const {transform} = useStore(({transform}) => ({transform}));
     const isMobile = useIsMobile()
